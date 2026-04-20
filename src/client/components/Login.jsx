@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './Login.css'
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onNavigate }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -95,6 +95,19 @@ export default function Login({ onLogin }) {
             <p>📧 survey.user@email.com</p>
             <p>📧 lucius.bagnoli@example.com</p>
             <small className="text-gray-500">Use any password for testing</small>
+          </div>
+          
+          <div className="register-link-section">
+            <p className="register-text">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                className="register-link"
+                onClick={() => onNavigate && onNavigate('register')}
+              >
+                Create one here
+              </button>
+            </p>
           </div>
         </div>
       </div>

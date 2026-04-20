@@ -4,40 +4,42 @@ import './Registration.css';
 
 export default function Registration({ onNavigate }) {
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    username: '',
     password: '',
-    confirm_password: ''
+    confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     
-    // Clear field-specific error
-    if (errors[e.target.name]) {
-      setErrors({
-        ...errors,
-        [e.target.name]: ''
-      });
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.first_name.trim()) {
-      newErrors.first_name = 'First name is required';
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
     }
 
-    if (!formData.last_name.trim()) {
-      newErrors.last_name = 'Last name is required';
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
     }
 
     if (!formData.email.trim()) {
@@ -46,16 +48,22 @@ export default function Registration({ onNavigate }) {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    if (!formData.confirm_password) {
-      newErrors.confirm_password = 'Please confirm your password';
-    } else if (formData.password !== formData.confirm_password) {
-      newErrors.confirm_password = 'Passwords do not match';
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -73,9 +81,24 @@ export default function Registration({ onNavigate }) {
 
     try {
       const authService = new AuthService();
-      await authService.register(formData);
+      await authService.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        username: formData.username,
+        password: formData.password
+      });
       
       setShowSuccess(true);
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: ''
+      });
     } catch (err) {
       setErrors({
         general: err.message || 'Registration failed. Please try again.'
@@ -112,44 +135,53 @@ export default function Registration({ onNavigate }) {
       <div className="registration-card">
         {/* Header */}
         <div className="registration-header">
-          <h1 className="registration-logo">e-Bakuna</h1>
-          <p className="registration-tagline">Cebu City Health Office — Vaccination Portal</p>
+          <h1 className="registration-logo">🔐 Register</h1>
+          <p className="registration-tagline">Create your E-Bakuna account</p>
         </div>
 
         {/* Form */}
         <div className="registration-body">
           <form onSubmit={handleSubmit} className="registration-form">
+            {/* General error */}
+            {errors.general && (
+              <div className="error-alert">
+                ⚠️ {errors.general}
+              </div>
+            )}
+
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label" htmlFor="first_name">
+                <label className="form-label" htmlFor="firstName">
                   First Name <span className="required">*</span>
                 </label>
                 <input
                   type="text"
-                  id="first_name"
-                  name="first_name"
-                  className={`form-input ${errors.first_name ? 'error' : ''}`}
+                  id="firstName"
+                  name="firstName"
+                  className={`form-input ${errors.firstName ? 'error' : ''}`}
                   placeholder="First name"
-                  value={formData.first_name}
+                  value={formData.firstName}
                   onChange={handleChange}
+                  disabled={loading}
                 />
-                {errors.first_name && <span className="field-error">{errors.first_name}</span>}
+                {errors.firstName && <span className="field-error">{errors.firstName}</span>}
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="last_name">
+                <label className="form-label" htmlFor="lastName">
                   Last Name <span className="required">*</span>
                 </label>
                 <input
                   type="text"
-                  id="last_name"
-                  name="last_name"
-                  className={`form-input ${errors.last_name ? 'error' : ''}`}
+                  id="lastName"
+                  name="lastName"
+                  className={`form-input ${errors.lastName ? 'error' : ''}`}
                   placeholder="Last name"
-                  value={formData.last_name}
+                  value={formData.lastName}
                   onChange={handleChange}
+                  disabled={loading}
                 />
-                {errors.last_name && <span className="field-error">{errors.last_name}</span>}
+                {errors.lastName && <span className="field-error">{errors.lastName}</span>}
               </div>
             </div>
 
@@ -162,11 +194,29 @@ export default function Registration({ onNavigate }) {
                 id="email"
                 name="email"
                 className={`form-input ${errors.email ? 'error' : ''}`}
-                placeholder="Enter your email"
+                placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={loading}
               />
               {errors.email && <span className="field-error">{errors.email}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="username">
+                Username <span className="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                className={`form-input ${errors.username ? 'error' : ''}`}
+                placeholder="Choose a username"
+                value={formData.username}
+                onChange={handleChange}
+                disabled={loading}
+              />
+              {errors.username && <span className="field-error">{errors.username}</span>}
             </div>
 
             <div className="form-group">
@@ -178,53 +228,49 @@ export default function Registration({ onNavigate }) {
                 id="password"
                 name="password"
                 className={`form-input ${errors.password ? 'error' : ''}`}
-                placeholder="Create a password"
+                placeholder="At least 6 characters"
                 value={formData.password}
                 onChange={handleChange}
+                disabled={loading}
               />
               {errors.password && <span className="field-error">{errors.password}</span>}
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="confirm_password">
+              <label className="form-label" htmlFor="confirmPassword">
                 Confirm Password <span className="required">*</span>
               </label>
               <input
                 type="password"
-                id="confirm_password"
-                name="confirm_password"
-                className={`form-input ${errors.confirm_password ? 'error' : ''}`}
-                placeholder="Confirm your password"
-                value={formData.confirm_password}
+                id="confirmPassword"
+                name="confirmPassword"
+                className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                placeholder="Re-enter your password"
+                value={formData.confirmPassword}
                 onChange={handleChange}
+                disabled={loading}
               />
-              {errors.confirm_password && <span className="field-error">{errors.confirm_password}</span>}
+              {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
             </div>
 
-            {errors.general && (
-              <div className="error-message">
-                {errors.general}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="btn-primary registration-btn"
+            <button 
+              type="submit" 
+              className="btn-register"
               disabled={loading}
             >
-              {loading ? 'Creating Account...' : 'Register'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
           <div className="registration-footer">
-            <p>
+            <p className="login-link">
               Already have an account?{' '}
-              <button
-                type="button"
-                className="link-button"
+              <button 
+                type="button" 
                 onClick={() => onNavigate('login')}
+                className="link-button"
               >
-                Login here
+                Sign In Here
               </button>
             </p>
           </div>

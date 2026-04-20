@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { AuthService } from './services/AuthService.js'
 import { EBakunaService } from './services/EBakunaService.js'
 import Login from './components/Login.jsx'
+import Registration from './components/Registration.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import './App.css'
 
 export default function EBakunaApp() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState('login') // 'login' or 'register'
   const [authService] = useState(() => new AuthService())
   const [ebakunaService] = useState(() => new EBakunaService())
 
@@ -49,6 +51,10 @@ export default function EBakunaApp() {
     }
   }
 
+  const handleNavigate = (page) => {
+    setCurrentPage(page)
+  }
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -66,7 +72,11 @@ export default function EBakunaApp() {
           <p>COVID-19 Vaccination Management System</p>
           <p>Cebu City Health Office</p>
         </header>
-        <Login onLogin={handleLogin} />
+        {currentPage === 'login' ? (
+          <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+        ) : (
+          <Registration onNavigate={handleNavigate} />
+        )}
       </div>
     )
   }

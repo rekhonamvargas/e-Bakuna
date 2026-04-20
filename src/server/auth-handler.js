@@ -1,69 +1,59 @@
 import { gs, GlideRecord } from '@servicenow/glide';
 
 /**
- * Simplified authentication handler that should work reliably
+ * Authentication handler with login and registration support
  * @param {Object} request - REST API request
  * @param {Object} response - REST API response  
  */
 export function authenticateUser(request, response) {
-    // Set response type first
     response.setContentType('application/json');
-    
-    // Enable CORS for cross-origin requests
     response.setHeader('Access-Control-Allow-Origin', '*');
     response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('AUTH API: Request received');
+        gs.info('🔐 AUTH API v2 - Request at: ' + new Date().toISOString());
         
-        // Handle preflight OPTIONS request - check if method property exists
-        if (request.method && request.method === 'OPTIONS') {
+        if (request.method === 'OPTIONS') {
             response.setStatus(200);
             response.getStreamWriter().writeString('{"status":"ok"}');
             return;
         }
         
-        // Get request data - properly handle Fluent/SDK request object
         let credentials = null;
-        let bodyContent = '';
         
-        try {
-            // In Fluent SDK, request.body is typically a string or an object
-            // Try to get the body content
-            if (request.body) {
-                if (typeof request.body === 'string') {
-                    bodyContent = request.body;
-                } else if (typeof request.body === 'object' && request.body.data) {
-                    bodyContent = request.body.data;
-                } else if (typeof request.body === 'object') {
-                    // Already an object, try to use it directly
-                    credentials = request.body;
-                    bodyContent = JSON.stringify(request.body);
-                }
+        // TRY METHOD 1: Direct request.body (string)
+        if (request.body && typeof request.body === 'string') {
+            gs.info('✓ Method 1: request.body is string');
+            try {
+                credentials = JSON.parse(request.body);
+            } catch (e) {
+                gs.error('✗ Failed to parse body string: ' + e.message);
             }
-            
-            // Parse if we have a string
-            if (!credentials && bodyContent) {
+        }
+        // TRY METHOD 2: request.body as object
+        else if (request.body && typeof request.body === 'object') {
+            gs.info('✓ Method 2: request.body is object');
+            credentials = request.body;
+        }
+        // TRY METHOD 3: Try to access via getParameter/getBodyAsString
+        else {
+            gs.warn('request.body not string/object, trying alternative methods');
+            if (typeof request.getBodyAsString === 'function') {
                 try {
-                    credentials = JSON.parse(bodyContent);
-                } catch (parseErr) {
-                    gs.error('AUTH API: JSON parse error - ' + parseErr.message + ' - Raw: ' + bodyContent.substring(0, 100));
+                    const bodyStr = request.getBodyAsString();
+                    gs.info('✓ Method 3: getBodyAsString() returned: ' + bodyStr.substring(0, 100));
+                    credentials = JSON.parse(bodyStr);
+                } catch (e) {
+                    gs.error('✗ getBodyAsString failed: ' + e.message);
                 }
             }
-        } catch (e) {
-            gs.error('AUTH API: Body extraction error: ' + e.message);
         }
         
-        gs.info('AUTH API: Request body received: ' + bodyContent.substring(0, 100));
-        gs.info('AUTH API: Credentials parsed: ' + (credentials ? 'Yes' : 'No'));
-        if (credentials) {
-            gs.info('AUTH API: Has username: ' + (credentials.username ? 'Yes' : 'No'));
-            gs.info('AUTH API: Has password: ' + (credentials.password ? 'Yes' : 'No'));
-        }
+        gs.info('Parsed credentials: ' + (credentials ? JSON.stringify(credentials).substring(0, 100) : 'null'));
         
         if (!credentials || !credentials.username || !credentials.password) {
-            gs.info('AUTH API: Missing credentials');
+            gs.info('❌ AUTH API: Missing credentials');
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -161,4 +151,135 @@ function getRoles(userId) {
         gs.error('AUTH API: Role fetch error: ' + e.message);
     }
     return roles;
+}
+
+/**
+ * Register a new user
+ * @param {Object} request - REST API request
+ * @param {Object} response - REST API response
+ */
+export function registerUser(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    
+    try {
+        gs.info('📝 REGISTER API - Request at: ' + new Date().toISOString());
+        
+        if (request.method === 'OPTIONS') {
+            response.setStatus(200);
+            response.getStreamWriter().writeString('{"status":"ok"}');
+            return;
+        }
+        
+        let data = null;
+        
+        if (request.body && typeof request.body === 'string') {
+            try {
+                data = JSON.parse(request.body);
+            } catch (e) {
+                gs.error('✗ Failed to parse body: ' + e.message);
+            }
+        } else if (request.body && typeof request.body === 'object') {
+            data = request.body;
+        } else if (typeof request.getBodyAsString === 'function') {
+            try {
+                const bodyStr = request.getBodyAsString();
+                data = JSON.parse(bodyStr);
+            } catch (e) {
+                gs.error('✗ getBodyAsString failed: ' + e.message);
+            }
+        }
+        
+        // Validate required fields
+        if (!data || !data.username || !data.password || !data.email || !data.firstName || !data.lastName) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Required fields: username, password, email, firstName, lastName'
+            }));
+            return;
+        }
+        
+        // Check if user already exists
+        const existing = new GlideRecord('sys_user');
+        existing.addQuery('user_name', data.username);
+        existing.query();
+        
+        if (existing.next()) {
+            response.setStatus(409);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Username already exists'
+            }));
+            return;
+        }
+        
+        // Check if email already exists
+        const existingEmail = new GlideRecord('sys_user');
+        existingEmail.addQuery('email', data.email);
+        existingEmail.query();
+        
+        if (existingEmail.next()) {
+            response.setStatus(409);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Email already registered'
+            }));
+            return;
+        }
+        
+        // Create new user
+        const newUser = new GlideRecord('sys_user');
+        newUser.initialize();
+        newUser.setValue('user_name', data.username);
+        newUser.setValue('email', data.email);
+        newUser.setValue('first_name', data.firstName);
+        newUser.setValue('last_name', data.lastName);
+        newUser.setValue('password', data.password); // ServiceNow handles password hashing
+        newUser.setValue('active', true);
+        
+        const userId = newUser.insert();
+        
+        if (!userId) {
+            gs.error('Failed to create user: ' + data.username);
+            response.setStatus(500);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Failed to create user'
+            }));
+            return;
+        }
+        
+        gs.info('✓ User registered: ' + data.username);
+        
+        // Fetch the new user to return complete info
+        const user = new GlideRecord('sys_user');
+        user.get(userId);
+        
+        const userInfo = {
+            sys_id: user.getUniqueValue(),
+            user_name: user.getValue('user_name'),
+            first_name: user.getValue('first_name'),
+            last_name: user.getValue('last_name'),
+            email: user.getValue('email'),
+            roles: getRoles(userId)
+        };
+        
+        response.setStatus(201);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            message: 'User registered successfully',
+            user: userInfo
+        }));
+        
+    } catch (error) {
+        gs.error('REGISTER API: Error - ' + error.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: 'Server error: ' + error.message
+        }));
+    }
 }

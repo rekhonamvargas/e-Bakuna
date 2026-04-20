@@ -4,77 +4,8 @@ export class AuthService {
     this.authApiUrl = '/api/x_2009786_vaccinat/v1/ebakuna_auth';
   }
 
-  async getCurrentUser() {
-    try {
-      const response = await fetch(`${this.baseUrl}/profile`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'X-UserToken': window.g_ck
-        }
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-
-      const data = await response.json();
-      const result = data.result;
-
-      if (!result || !result.user_name) {
-        return null;
-      }
-
-      // Get user roles
-      const roles = await this.getUserRoles(result.sys_id);
-
-      return {
-        sys_id: result.sys_id,
-        user_name: result.user_name,
-        first_name: result.first_name,
-        last_name: result.last_name,
-        email: result.email,
-        roles: roles
-      };
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-      return null;
-    }
-  }
-
-  async getUserRoles(userId) {
-    try {
-      const response = await fetch(`${this.baseUrl}/table/sys_user_has_role?sysparm_query=user=${userId}&sysparm_display_value=all&sysparm_fields=role.name`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'X-UserToken': window.g_ck
-        }
-      });
-
-      if (!response.ok) {
-        return [];
-      }
-
-      const data = await response.json();
-      const roles = data.result || [];
-
-      return roles.map(roleRecord => {
-        const roleName = typeof roleRecord.role === 'object' ? 
-          roleRecord.role.display_value : 
-          roleRecord.role;
-        return roleName;
-      });
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      return [];
-    }
-  }
-
   async login(username, password) {
-    console.group('🔐 Login Process');
-    console.log('Username:', username);
-    console.log('Endpoint:', `${this.authApiUrl}/login`);
+    console.log('🔐 Logging in:', username);
     
     try {
       const requestData = {
@@ -82,7 +13,8 @@ export class AuthService {
         password: password
       };
       
-      console.log('Request payload:', { username: requestData.username, password: '***' });
+      console.log('POST to:', `${this.authApiUrl}/login`);
+      console.log('Payload:', requestData);
       
       const response = await fetch(`${this.authApiUrl}/login`, {
         method: 'POST',
@@ -94,30 +26,92 @@ export class AuthService {
       });
 
       console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
       const responseText = await response.text();
       console.log('Raw response:', responseText);
 
       let responseData;
       try {
         responseData = JSON.parse(responseText);
-        console.log('Parsed response:', responseData);
       } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        console.groupEnd();
-        throw new Error(`Invalid JSON response: ${responseText}`);
+        console.error('Failed to parse response:', parseError);
+        throw new Error(`Invalid response: ${responseText}`);
       }
 
       if (!response.ok) {
         const errorMessage = responseData.error || `HTTP ${response.status}`;
         console.error('Login failed:', errorMessage);
-        console.groupEnd();
         throw new Error(errorMessage);
       }
 
       if (responseData.status !== 'success' || !responseData.user) {
-        console.error('Invalid response format:', responseData);
+        console.error('Invalid response:', responseData);
+        throw new Error('Invalid authentication response');
+      }
+
+      console.log('✓ Login successful:', responseData.user);
+      return responseData.user;
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  async register(userData) {
+    console.log('📝 Registering user:', userData.username);
+    
+    try {
+      const requestData = {
+        username: userData.username.trim(),
+        password: userData.password,
+        email: userData.email.trim(),
+        firstName: userData.firstName.trim(),
+        lastName: userData.lastName.trim()
+      };
+      
+      console.log('POST to:', `${this.authApiUrl}/register`);
+      console.log('Payload:', { ...requestData, password: '***' });
+      
+      const response = await fetch(`${this.authApiUrl}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error(`Invalid response: ${responseText}`);
+      }
+
+      if (!response.ok) {
+        const errorMessage = responseData.error || `HTTP ${response.status}`;
+        console.error('Registration failed:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      if (responseData.status !== 'success' || !responseData.user) {
+        console.error('Invalid response:', responseData);
+        throw new Error('Invalid registration response');
+      }
+
+      console.log('✓ Registration successful:', responseData.user);
+      return responseData.user;
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  }
         console.groupEnd();
         throw new Error('Login failed: Invalid response');
       }
