@@ -99,22 +99,29 @@ export function authenticateUser(request, response) {
         // Format (JSON): {"creds":{"u":"username","p":"password"},"role":"citizen"}
         const description = user.getValue('description') || '';
         gs.info('LOGIN: Description field present: ' + (description.length > 0));
+        gs.info('LOGIN: Description first 60 chars: ' + description.substring(0, 60));
         
         let storedPassword = '';
         try {
-            if (description.startsWith('{')) {
+            if (description && description.startsWith('{')) {
                 const credsObj = JSON.parse(description);
                 storedPassword = credsObj.creds.p || '';
                 gs.info('LOGIN: Extracted password from JSON - length: ' + storedPassword.length);
+            } else {
+                gs.warn('LOGIN: Description does not start with { - format issue');
             }
         } catch (e) {
-            gs.warn('LOGIN: Failed to parse JSON credentials: ' + e.message);
+            gs.error('LOGIN: JSON parse failed: ' + e.message);
+            gs.error('LOGIN: Full description: ' + description);
         }
         
-        gs.info('LOGIN: Password check - received: ' + password.length + ' chars, stored: ' + storedPassword.length + ' chars');
+        gs.info('LOGIN: Comparing passwords:');
+        gs.info('  Received length: ' + password.length);
+        gs.info('  Stored length: ' + storedPassword.length);
+        gs.info('  Equal: ' + (password === storedPassword));
         
         if (!storedPassword || storedPassword !== password) {
-            gs.error('LOGIN: Password mismatch - received vs stored does not match');
+            gs.error('LOGIN: Password mismatch - authentication failed');
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -277,9 +284,12 @@ export function registerUser(request, response) {
             role: role
         };
         const credString = JSON.stringify(credObj);
+        gs.info('REGISTER: Credential JSON to store: ' + credString);
+        gs.info('REGISTER: Credential JSON length: ' + credString.length);
+        
         newUser.setValue('description', credString);
         
-        gs.info('REGISTER: Storing credentials for ' + data.username);
+        gs.info('REGISTER: Set description field for ' + data.username);
         
         const userId = newUser.insert();
         
@@ -299,7 +309,8 @@ export function registerUser(request, response) {
         const verifyUser = new GlideRecord('sys_user');
         verifyUser.get(userId);
         const savedCreds = verifyUser.getValue('description') || '';
-        gs.info('REGISTER: Verification - credentials saved: ' + (savedCreds.length > 0));
+        gs.info('REGISTER: Verification - saved length: ' + savedCreds.length);
+        gs.info('REGISTER: Saved first 60 chars: ' + savedCreds.substring(0, 60));
         
         // Fetch the new user to return complete info
         const user = new GlideRecord('sys_user');
