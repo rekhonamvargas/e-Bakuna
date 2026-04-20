@@ -391,6 +391,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: '12899aa1fbee4299b777fa6efe4ef6a2'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'algorithm'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '13365e93d33644b7bec39e2bdf0d53ee'
                         key: {
@@ -568,6 +577,13 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'medical_history'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_db_object'
+                        id: '1cd585f70baf45b7a24c9669171c7493'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
                         }
                     },
                     {
@@ -881,6 +897,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: '29bfc13b6e3c4510a7181ba93c8d7675'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'password_hash'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: '2ac13f0519aa4b438e3c3079437e2cfa'
                         deleted: true
@@ -1042,6 +1067,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '3183eeb4c4a441ea89ce8d411bb6d02b'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'algorithm'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '320d6391d60a4d7d898a0d3d5a69687d'
                         deleted: true
@@ -1157,6 +1190,15 @@ declare global {
                     },
                     {
                         table: 'sys_documentation'
+                        id: '35f89240eb184734a4878633ff441873'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'active'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
                         id: '36332aa5bdea4cd98cc5da46a1e100e4'
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
@@ -1231,6 +1273,14 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'gender'
                             value: 'other'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '3b47f991bb604860840fe1dde020eb9b'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'active'
                         }
                     },
                     {
@@ -1461,6 +1511,15 @@ declare global {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'dose_number'
                             value: 'first_dose'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '466f8a2cd53e441e9e07d5758eadf224'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'NULL'
+                            language: 'en'
                         }
                     },
                     {
@@ -1758,6 +1817,14 @@ declare global {
                     },
                     {
                         table: 'sys_dictionary'
+                        id: '5a937f5d74e14dd6bce65ccd6f54bb07'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'password_salt'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
                         id: '5bbb73f4b721460699053d2496dc79bf'
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
@@ -1852,6 +1919,15 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'NULL'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '603956780f684e038160508c8c9a2895'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'password_salt'
                             language: 'en'
                         }
                     },
@@ -2507,6 +2583,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '88bd10c9e627460496d343975baa36a0'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'NULL'
+                        }
+                    },
+                    {
                         table: 'sys_security_acl_role'
                         id: '8a74e9313c6b40ea83fb70f5925671bc'
                         deleted: true
@@ -2738,6 +2822,14 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'name'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '9627769797c54f7eae723ead6ebf23bb'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'username'
                         }
                     },
                     {
@@ -3080,12 +3172,28 @@ declare global {
                         }
                     },
                     {
+                        table: 'ua_table_licensing_config'
+                        id: 'adbeda2fd1c94540ac3044029183522a'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: 'ae39a496fc7e4732b2f91441b7b4e290'
                         key: {
                             name: 'x_2009786_vaccinat_citizen_booking'
                             element: 'dose_number'
                             value: 'second'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: 'aeb0f8116aef4b0caf586f9ff3af36a8'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'username'
+                            language: 'en'
                         }
                     },
                     {
@@ -3351,6 +3459,14 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_citizen_booking'
                             element: 'barangay'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'bab72430f1c549618ec6294f36088e0e'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'user'
                         }
                     },
                     {
@@ -3750,6 +3866,14 @@ declare global {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'dose_number'
                             value: 'second'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'ce1df64a3a0147908467039ee838ef5e'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'password_hash'
                         }
                     },
                     {
@@ -4371,6 +4495,15 @@ declare global {
                         id: 'f9937a055f1a4f0390448fd7d1359de0'
                         key: {
                             name: 'x_2009786_vaccinat_ebakuna.do - BYOUI Files'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: 'fb483a2dd0cb4ef68327affb44664ea7'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_credential'
+                            element: 'user'
+                            language: 'en'
                         }
                     },
                     {

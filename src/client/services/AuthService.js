@@ -8,58 +8,34 @@ export class AuthService {
     console.log('🔐 Logging in:', username);
     
     try {
-      const requestData = {
-        username: username.trim(),
-        password: password
-      };
-      
-      // Send as query parameters (workaround for body parsing issue)
       const params = new URLSearchParams();
-      params.append('username', requestData.username);
-      params.append('password', requestData.password);
-      
-      const url = `${this.authApiUrl}/login?${params.toString()}`;
-      console.log('POST to:', url);
-      console.log('Payload via query params:', { ...requestData, password: '***' });
-      
-      const response = await fetch(url, {
+      params.append('username', username);
+      params.append('password', password);
+
+      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString()
       });
 
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-
-      let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
-        throw new Error(`Invalid response: ${responseText}`);
+      if (response.ok) {
+        const responseData = await response.json();
+        if (responseData.status === 'success' && responseData.user) {
+          localStorage.setItem('ebakuna_user', JSON.stringify(responseData.user));
+          return responseData.user;
+        } else {
+          const err = new Error(responseData.error || 'Invalid login response');
+          err.debug = responseData.debug;
+          throw err;
+        }
+      } else {
+        const errorData = await response.json();
+        const err = new Error(errorData.error || 'Login failed');
+        err.debug = errorData.debug; // Attach debug info
+        throw err;
       }
-
-      if (!response.ok) {
-        const errorMessage = responseData.error || `HTTP ${response.status}`;
-        console.error('Login failed:', errorMessage);
-        throw new Error(errorMessage);
-      }
-
-      if (responseData.status !== 'success' || !responseData.user) {
-        console.error('Invalid response:', responseData);
-        throw new Error('Invalid authentication response');
-      }
-
-      // Store user session in localStorage
-      localStorage.setItem('ebakuna_user', JSON.stringify(responseData.user));
-      localStorage.setItem('ebakuna_token', new Date().getTime().toString());
-      
-      console.log('✓ Login successful:', responseData.user);
-      return responseData.user;
-      
     } catch (error) {
       console.error('Login error:', error);
       throw error;

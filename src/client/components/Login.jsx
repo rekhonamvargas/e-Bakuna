@@ -6,11 +6,13 @@ export default function Login({ onLogin, onNavigate }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [debugInfo, setDebugInfo] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
+    setDebugInfo(null)
+    setLoading(true)
 
     try {
       const authService = new AuthService()
@@ -24,6 +26,9 @@ export default function Login({ onLogin, onNavigate }) {
     } catch (error) {
       console.error('❌ Login error:', error)
       setError(error.message || 'Login failed')
+      if (error.debug) {
+        setDebugInfo(error.debug)
+      }
     } finally {
       setLoading(false)
     }
@@ -45,12 +50,12 @@ export default function Login({ onLogin, onNavigate }) {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {error && (
-            <div className="error-message">
-              ⚠️ {error}
-            </div>
+          {error && <p className="error-message">{error}</p>}
+          {debugInfo && (
+            <pre className="debug-info">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
           )}
-
           <div className="form-group">
             <label htmlFor="username">Email / Username</label>
             <input

@@ -26,13 +26,67 @@ function decodeBase64(str) {
     }
 }
 
+function sha256Base64(str) {
+    const md = java.security.MessageDigest.getInstance('SHA-256');
+    const bytes = new java.lang.String(str).getBytes('UTF-8');
+    const digest = md.digest(bytes);
+    return java.util.Base64.getEncoder().encodeToString(digest);
+}
+
+function generateSalt() {
+    try {
+        if (typeof gs.generateGUID === 'function') {
+            return gs.generateGUID();
+        }
+    } catch (e) {
+        // ignore
+    }
+    return java.util.UUID.randomUUID().toString();
+}
+
+function computePasswordHash(password, salt) {
+    return sha256Base64(salt + ':' + password);
+}
+
+function parseUrlEncodedForm(formBody) {
+    const parsed = {};
+    if (!formBody || typeof formBody !== 'string') return parsed;
+    const pairs = formBody.split('&');
+    for (let i = 0; i < pairs.length; i++) {
+        const pair = pairs[i];
+        if (!pair) continue;
+        const eqIdx = pair.indexOf('=');
+        const rawKey = eqIdx >= 0 ? pair.substring(0, eqIdx) : pair;
+        const rawVal = eqIdx >= 0 ? pair.substring(eqIdx + 1) : '';
+        const key = decodeURIComponent((rawKey || '').replace(/\+/g, ' '));
+        const val = decodeURIComponent((rawVal || '').replace(/\+/g, ' '));
+        if (key) parsed[key] = val;
+    }
+    return parsed;
+}
+
 /**
  * Parse request - from POST body or query params
  */
 function parseRequestBody(request) {
     try {
-        if (request.body && Object.keys(request.body).length > 0) {
-            return request.body;
+        if (request.body) {
+            // Fluent / Scripted REST can give us a string body for x-www-form-urlencoded
+            if (typeof request.body === 'string') {
+                const asForm = parseUrlEncodedForm(request.body);
+                if (Object.keys(asForm).length > 0) return asForm;
+            }
+
+            // Some runtimes wrap the raw body in request.body.data
+            if (request.body.data && typeof request.body.data === 'string') {
+                const asForm = parseUrlEncodedForm(request.body.data);
+                if (Object.keys(asForm).length > 0) return asForm;
+            }
+
+            // If it's already an object (e.g., JSON)
+            if (typeof request.body === 'object' && Object.keys(request.body).length > 0) {
+                return request.body;
+            }
         }
         
         if (request.queryParams && Object.keys(request.queryParams).length > 0) {
@@ -75,11 +129,7 @@ export function authenticateUser(request, response) {
         const password = credentials.password.toString().trim();
         
         gs.info('USERNAME: [' + username + ']');
-        gs.info('PASSWORD (plain): [' + password + '] len=' + password.length);
-        
-        // Encode received password
-        const encodedReceivedPassword = encodeBase64(password);
-        gs.info('PASSWORD (encoded): [' + encodedReceivedPassword + '] len=' + encodedReceivedPassword.length);
+        gs.info('PASSWORD length=' + password.length);
         
         // Query sys_user
         const user = new GlideRecord('sys_user');
@@ -104,56 +154,75 @@ export function authenticateUser(request, response) {
         }
         
         gs.info('USER FOUND: ' + user.getValue('user_name'));
-        
-        // Try password from phone_number field first (Base64)
-        const phoneNumberValue = user.getValue('phone_number') || '';
-        gs.info('PHONE_NUMBER field: [' + phoneNumberValue + '] len=' + phoneNumberValue.length);
-        
+
+        // Preferred: lookup salted hash in app credential table
         let passwordMatches = false;
         let matchMethod = 'NONE';
-        
-        // Method 1: Base64 comparison (phone_number field)
-        if (phoneNumberValue && phoneNumberValue.length > 0) {
-            if (phoneNumberValue === encodedReceivedPassword) {
+        let credentialFound = false;
+        let credentialAlgorithm = '';
+
+        const creds = new GlideRecord('x_2009786_vaccinat_user_credential');
+        creds.addQuery('user', user.getUniqueValue());
+        creds.addQuery('active', true);
+        creds.query();
+
+        if (creds.next()) {
+            credentialFound = true;
+            const salt = creds.getValue('password_salt') || '';
+            const storedHash = creds.getValue('password_hash') || '';
+            credentialAlgorithm = creds.getValue('algorithm') || '';
+
+            const computed = computePasswordHash(password, salt);
+            if (computed === storedHash) {
                 passwordMatches = true;
-                matchMethod = 'BASE64_MATCH_PHONE';
-                gs.info('✓ PASSWORD MATCHED (Base64 in phone_number)');
+                matchMethod = 'CREDENTIAL_TABLE_HASH_MATCH';
+                gs.info('✓ PASSWORD MATCHED (credential table)');
             } else {
-                gs.info('✗ Base64 mismatch - trying decode');
-                // Maybe it's stored as plain text?
-                if (phoneNumberValue === password) {
-                    passwordMatches = true;
-                    matchMethod = 'PLAIN_MATCH_PHONE';
-                    gs.info('✓ PASSWORD MATCHED (plain text in phone_number)');
-                }
+                gs.info('✗ Password hash mismatch (credential table)');
             }
         }
-        
-        // Method 2: Try backup location in internal_notes
-        if (!passwordMatches) {
+
+        // Legacy fallback: previous attempts stored Base64 in sys_user fields.
+        // If we can match legacy, auto-migrate into credential table.
+        if (!passwordMatches && !credentialFound) {
+            const encodedReceivedPassword = encodeBase64(password);
+            const phoneNumberValue = user.getValue('phone_number') || '';
             const internalNotes = user.getValue('internal_notes') || '';
-            gs.info('INTERNAL_NOTES field: [' + internalNotes + '] len=' + internalNotes.length);
-            
-            if (internalNotes && internalNotes.length > 0) {
-                if (internalNotes === encodedReceivedPassword) {
-                    passwordMatches = true;
-                    matchMethod = 'BASE64_MATCH_INTERNAL_NOTES';
-                    gs.info('✓ PASSWORD MATCHED (Base64 in internal_notes)');
-                } else if (internalNotes === password) {
-                    passwordMatches = true;
-                    matchMethod = 'PLAIN_MATCH_INTERNAL_NOTES';
-                    gs.info('✓ PASSWORD MATCHED (plain text in internal_notes)');
+
+            if (phoneNumberValue && phoneNumberValue === encodedReceivedPassword) {
+                passwordMatches = true;
+                matchMethod = 'LEGACY_BASE64_MATCH_PHONE';
+            } else if (internalNotes && internalNotes === encodedReceivedPassword) {
+                passwordMatches = true;
+                matchMethod = 'LEGACY_BASE64_MATCH_INTERNAL_NOTES';
+            } else if (phoneNumberValue && phoneNumberValue === password) {
+                passwordMatches = true;
+                matchMethod = 'LEGACY_PLAIN_MATCH_PHONE';
+            } else if (internalNotes && internalNotes === password) {
+                passwordMatches = true;
+                matchMethod = 'LEGACY_PLAIN_MATCH_INTERNAL_NOTES';
+            }
+
+            if (passwordMatches) {
+                gs.info('✓ LEGACY PASSWORD MATCH, migrating to credential table: ' + matchMethod);
+                try {
+                    const salt = generateSalt();
+                    const hash = computePasswordHash(password, salt);
+                    const newCred = new GlideRecord('x_2009786_vaccinat_user_credential');
+                    newCred.initialize();
+                    newCred.setValue('username', user.getValue('user_name'));
+                    newCred.setValue('user', user.getUniqueValue());
+                    newCred.setValue('password_salt', salt);
+                    newCred.setValue('password_hash', hash);
+                    newCred.setValue('algorithm', 'SHA256_BASE64_SALT_PREFIX_V1');
+                    newCred.setValue('active', true);
+                    newCred.insert();
+                } catch (e) {
+                    gs.error('Credential migrate failed: ' + e.message);
                 }
             }
         }
-        
-        // Method 3: Try plain password match (worst case fallback)
-        if (!passwordMatches && password === phoneNumberValue) {
-            passwordMatches = true;
-            matchMethod = 'DIRECT_PLAIN_MATCH';
-            gs.info('✓ PASSWORD MATCHED (direct plain text)');
-        }
-        
+
         gs.info('MATCH METHOD: ' + matchMethod);
         gs.info('PASSWORD MATCHES: ' + passwordMatches);
         
@@ -165,9 +234,10 @@ export function authenticateUser(request, response) {
                 error: 'Invalid username or password',
                 debug: {
                     userFound: true,
-                    phoneNumberLength: phoneNumberValue.length,
+                    credentialFound: credentialFound,
+                    credentialAlgorithm: credentialAlgorithm,
                     passwordLength: password.length,
-                    encodedLength: encodedReceivedPassword.length
+                    usernameLength: username.length
                 }
             }));
             return;
@@ -248,11 +318,7 @@ export function registerUser(request, response) {
             return;
         }
         
-        // Encode password BEFORE insert
-        const encodedPassword = encodeBase64(data.password);
-        gs.info('PASSWORD ENCODED: length=' + encodedPassword.length);
-        
-        // Create sys_user with password in phone_number field AND internal_notes as backup
+        // Create sys_user (no password stored on sys_user)
         const newUser = new GlideRecord('sys_user');
         newUser.initialize();
         newUser.setValue('user_name', data.username);
@@ -261,8 +327,6 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
         newUser.setValue('description', 'ROLE:' + role);
-        newUser.setValue('phone_number', encodedPassword); // PASSWORD PRIMARY STORAGE
-        newUser.setValue('internal_notes', encodedPassword); // PASSWORD BACKUP STORAGE
         
         const userId = newUser.insert();
         gs.info('USER CREATED: ID=' + userId);
@@ -276,23 +340,34 @@ export function registerUser(request, response) {
             }));
             return;
         }
-        
-        // Verify password was stored
-        const verify = new GlideRecord('sys_user');
-        verify.get(userId);
-        const storedPwdPhone = verify.getValue('phone_number') || '';
-        const storedPwdNotes = verify.getValue('internal_notes') || '';
-        gs.info('VERIFICATION: phone_number=' + storedPwdPhone.length + ', internal_notes=' + storedPwdNotes.length);
-        
-        if (storedPwdPhone === encodedPassword) {
-            gs.info('✓ PASSWORD VERIFIED IN PHONE_NUMBER FIELD');
-        } else if (storedPwdNotes === encodedPassword) {
-            gs.info('✓ PASSWORD VERIFIED IN INTERNAL_NOTES FIELD');
-        } else {
-            gs.error('❌ PASSWORD NOT VERIFIED');
-            gs.error('  Expected: [' + encodedPassword.substring(0, 30) + '...]');
-            gs.error('  Phone has: [' + storedPwdPhone.substring(0, 30) + '...]');
-            gs.error('  Notes has: [' + storedPwdNotes.substring(0, 30) + '...]');
+
+        // Create credential record (salted hash)
+        const salt = generateSalt();
+        const hash = computePasswordHash(data.password, salt);
+        const cred = new GlideRecord('x_2009786_vaccinat_user_credential');
+        cred.initialize();
+        cred.setValue('username', data.username);
+        cred.setValue('user', userId);
+        cred.setValue('password_salt', salt);
+        cred.setValue('password_hash', hash);
+        cred.setValue('algorithm', 'SHA256_BASE64_SALT_PREFIX_V1');
+        cred.setValue('active', true);
+
+        const credId = cred.insert();
+        if (!credId) {
+            gs.error('CREDENTIAL INSERT FAILED - rolling back sys_user');
+            try {
+                const rollback = new GlideRecord('sys_user');
+                if (rollback.get(userId)) rollback.deleteRecord();
+            } catch (e) {
+                gs.error('Rollback failed: ' + e.message);
+            }
+            response.setStatus(500);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Failed to create user credentials'
+            }));
+            return;
         }
         
         gs.info('✓ REGISTER SUCCESS for ' + data.username);
