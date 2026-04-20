@@ -198,6 +198,30 @@ export default function BookingPortal({ user, onLogout, hideLogout = false }) {
         </div>
       </div>
 
+      <section className="role-overview citizen-overview">
+        <div className="role-overview-copy">
+          <span className="role-overview-kicker">Citizen Dashboard</span>
+          <h2>Book, track, and confirm your vaccination request</h2>
+          <p>
+            This is where you submit a request, save your reference number, and check updates from the clinic staff.
+          </p>
+        </div>
+        <div className="role-overview-grid">
+          <div className="role-card">
+            <strong>1. Book</strong>
+            <span>Fill out your details and submit a vaccination request.</span>
+          </div>
+          <div className="role-card">
+            <strong>2. Track</strong>
+            <span>Use your reference number to check status updates.</span>
+          </div>
+          <div className="role-card">
+            <strong>3. Wait for review</strong>
+            <span>Clinic staff will approve or reject the request.</span>
+          </div>
+        </div>
+      </section>
+
       <div className="dashboard-stats">
         <div className="stat-card">
           <div className="stat-icon">👥</div>

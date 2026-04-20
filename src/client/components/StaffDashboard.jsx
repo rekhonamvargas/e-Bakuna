@@ -91,6 +91,31 @@ export default function StaffDashboard({ user, onLogout, hideLogout = false }) {
       </nav>
 
       <div className="container">
+        <section className="role-overview staff-overview">
+          <div className="role-overview-copy">
+            <span className="role-overview-kicker">Clinic Staff Dashboard</span>
+            <h2>Review incoming bookings and decide what happens next</h2>
+            <p>
+              This screen is for nurses and doctors onsite to review pending requests, approve or reject them,
+              and assign the final schedule for approved appointments.
+            </p>
+          </div>
+          <div className="role-overview-grid">
+            <div className="role-card">
+              <strong>Review</strong>
+              <span>Check the citizen details and booking reference.</span>
+            </div>
+            <div className="role-card">
+              <strong>Approve / Reject</strong>
+              <span>Mark bookings based on clinic availability and verification.</span>
+            </div>
+            <div className="role-card">
+              <strong>Assign schedule</strong>
+              <span>Set the final clinic schedule for approved bookings.</span>
+            </div>
+          </div>
+        </section>
+
         <div className="summary-section">
           <h2 className="section-title">Pending Bookings</h2>
           <div className="stats-grid">

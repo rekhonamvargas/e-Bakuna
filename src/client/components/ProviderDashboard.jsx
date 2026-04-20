@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { EBakunaService } from '../services/EBakunaService.js';
+import './StaffDashboard.css';
 
 export default function ProviderDashboard({ user, onLogout, hideLogout = false }) {
   const [clinics, setClinics] = useState([]);
@@ -71,6 +72,31 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false }
       </nav>
 
       <div className="container">
+        <section className="role-overview provider-overview">
+          <div className="role-overview-copy">
+            <span className="role-overview-kicker">Provider Dashboard</span>
+            <h2>Oversee the whole vaccination operation</h2>
+            <p>
+              Hospitals, RHUs, CHOs, and private clinics use this view to manage clinics, set schedules, and monitor
+              booking records across the system.
+            </p>
+          </div>
+          <div className="role-overview-grid">
+            <div className="role-card">
+              <strong>Manage clinics</strong>
+              <span>Keep locations, contact details, and operating hours up to date.</span>
+            </div>
+            <div className="role-card">
+              <strong>Set schedules</strong>
+              <span>Create and maintain vaccination availability for each clinic.</span>
+            </div>
+            <div className="role-card">
+              <strong>Oversee bookings</strong>
+              <span>Review booking volume and track approved or pending requests.</span>
+            </div>
+          </div>
+        </section>
+
         <div className="summary-section">
           <h2 className="section-title">Provider Overview</h2>
           <div className="stats-grid">
