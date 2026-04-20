@@ -94,34 +94,23 @@ export function authenticateUser(request, response) {
             }));
             return;
         }
-        
-        // Retrieve stored credentials from description field
-        // Format (JSON): {"creds":{"u":"username","p":"password"},"role":"citizen"}
-        const description = user.getValue('description') || '';
-        gs.info('LOGIN: Description field present: ' + (description.length > 0));
-        gs.info('LOGIN: Description first 60 chars: ' + description.substring(0, 60));
+        // Retrieve stored credentials from notes field
+        // Format: PWD_HASH:::{password}
+        const notes = user.getValue('notes') || '';
+        gs.info('LOGIN: Notes field length: ' + notes.length);
         
         let storedPassword = '';
-        try {
-            if (description && description.startsWith('{')) {
-                const credsObj = JSON.parse(description);
-                storedPassword = credsObj.creds.p || '';
-                gs.info('LOGIN: Extracted password from JSON - length: ' + storedPassword.length);
-            } else {
-                gs.warn('LOGIN: Description does not start with { - format issue');
-            }
-        } catch (e) {
-            gs.error('LOGIN: JSON parse failed: ' + e.message);
-            gs.error('LOGIN: Full description: ' + description);
+        if (notes.indexOf('PWD_HASH:::') === 0) {
+            storedPassword = notes.substring(11); // Remove 'PWD_HASH:::' prefix
+            gs.info('LOGIN: Extracted password from notes - length: ' + storedPassword.length);
+        } else {
+            gs.warn('LOGIN: Password not found in notes field');
         }
         
-        gs.info('LOGIN: Comparing passwords:');
-        gs.info('  Received length: ' + password.length);
-        gs.info('  Stored length: ' + storedPassword.length);
-        gs.info('  Equal: ' + (password === storedPassword));
+        gs.info('LOGIN: Comparing - received: ' + password.length + ' chars, stored: ' + storedPassword.length + ' chars');
         
         if (!storedPassword || storedPassword !== password) {
-            gs.error('LOGIN: Password mismatch - authentication failed');
+            gs.error('LOGIN: Password mismatch for ' + username);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -129,6 +118,8 @@ export function authenticateUser(request, response) {
             }));
             return;
         }
+        
+        gs.info('LOGIN: ✓ Password verified successfully for ' + username);
         
         gs.info('LOGIN: ✓ Password verified for ' + username);
         
@@ -180,12 +171,12 @@ function getRoles(userId) {
         userGr.get(userId);
         const description = userGr.getValue('description') || '';
         
-        // Extract role from JSON description
-        if (description.startsWith('{')) {
-            const credObj = JSON.parse(description);
-            if (credObj.role) {
-                roles.push(credObj.role);
-                gs.info('getRoles: Found role - ' + credObj.role);
+        // Extract role from description: ROLE:citizen
+        if (description.indexOf('ROLE:') === 0) {
+            const role = description.substring(5).trim();
+            if (role) {
+                roles.push(role);
+                gs.info('getRoles: Found role - ' + role);
             }
         }
         
@@ -277,19 +268,16 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
         
-        // Store credentials in description field as JSON
-        // Format: {"creds":{"u":"username","p":"password"},"role":"citizen"}
-        const credObj = {
-            creds: { u: data.username, p: data.password },
-            role: role
-        };
-        const credString = JSON.stringify(credObj);
-        gs.info('REGISTER: Credential JSON to store: ' + credString);
-        gs.info('REGISTER: Credential JSON length: ' + credString.length);
+        // Store password in notes field (reliable, no size limits)
+        // Format: PWD_HASH:::{password}
+        const pwdStorage = 'PWD_HASH:::' + data.password;
+        newUser.setValue('notes', pwdStorage);
         
-        newUser.setValue('description', credString);
+        // Store role in description for easy access
+        newUser.setValue('description', 'ROLE:' + role);
         
-        gs.info('REGISTER: Set description field for ' + data.username);
+        gs.info('REGISTER: Password storage prepared for ' + data.username);
+        gs.info('REGISTER: Storage length: ' + pwdStorage.length);
         
         const userId = newUser.insert();
         
@@ -308,9 +296,9 @@ export function registerUser(request, response) {
         // Verify the user was created and password was saved
         const verifyUser = new GlideRecord('sys_user');
         verifyUser.get(userId);
-        const savedCreds = verifyUser.getValue('description') || '';
-        gs.info('REGISTER: Verification - saved length: ' + savedCreds.length);
-        gs.info('REGISTER: Saved first 60 chars: ' + savedCreds.substring(0, 60));
+        const savedNotes = verifyUser.getValue('notes') || '';
+        const savedDesc = verifyUser.getValue('description') || '';
+        gs.info('REGISTER: Verification - notes length: ' + savedNotes.length + ', description: ' + savedDesc);
         
         // Fetch the new user to return complete info
         const user = new GlideRecord('sys_user');
