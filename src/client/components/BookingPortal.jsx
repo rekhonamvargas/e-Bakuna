@@ -188,18 +188,6 @@ export default function BookingPortal({ user, onLogout, hideLogout = false, hide
 
   return (
     <div className="booking-portal">
-      {!hideHeader && (
-        <div className="portal-header">
-          <h1>🏥 E-Bakuna Vaccination Portal</h1>
-          <div className="user-info">
-            <span>Welcome, {user?.first_name}</span>
-            {!hideLogout && (
-              <button onClick={onLogout} className="btn-logout">Logout</button>
-            )}
-          </div>
-        </div>
-      )}
-
       <section className="role-overview citizen-overview">
         <div className="role-overview-copy">
           <span className="role-overview-kicker">Citizen Dashboard</span>
