@@ -17,49 +17,50 @@ export function authenticateUser(request, response) {
     try {
         gs.info('AUTH API: Request received');
         
-        // Handle preflight OPTIONS request
-        if (request.getMethod() === 'OPTIONS') {
+        // Handle preflight OPTIONS request - check if method property exists
+        if (request.method && request.method === 'OPTIONS') {
             response.setStatus(200);
             response.getStreamWriter().writeString('{"status":"ok"}');
             return;
         }
         
-        // Get request data - try multiple methods
+        // Get request data - properly handle Fluent/SDK request object
         let credentials = null;
+        let bodyContent = '';
         
-        // Method 1: Check request body directly
         try {
+            // In Fluent SDK, request.body is typically a string or an object
+            // Try to get the body content
             if (request.body) {
-                if (request.body.data) {
-                    credentials = request.body.data;
-                } else if (typeof request.body === 'string') {
-                    credentials = JSON.parse(request.body);
-                } else {
+                if (typeof request.body === 'string') {
+                    bodyContent = request.body;
+                } else if (typeof request.body === 'object' && request.body.data) {
+                    bodyContent = request.body.data;
+                } else if (typeof request.body === 'object') {
+                    // Already an object, try to use it directly
                     credentials = request.body;
+                    bodyContent = JSON.stringify(request.body);
+                }
+            }
+            
+            // Parse if we have a string
+            if (!credentials && bodyContent) {
+                try {
+                    credentials = JSON.parse(bodyContent);
+                } catch (parseErr) {
+                    gs.error('AUTH API: JSON parse error - ' + parseErr.message + ' - Raw: ' + bodyContent.substring(0, 100));
                 }
             }
         } catch (e) {
-            gs.error('AUTH API: Body parse error: ' + e.message);
+            gs.error('AUTH API: Body extraction error: ' + e.message);
         }
         
-        // Method 2: Try reading from data stream
-        if (!credentials && request.body && request.body.dataStream) {
-            try {
-                const stream = request.body.dataStream;
-                let content = '';
-                let line;
-                while ((line = stream.readLine()) != null) {
-                    content += line;
-                }
-                if (content) {
-                    credentials = JSON.parse(content);
-                }
-            } catch (e) {
-                gs.error('AUTH API: Stream parse error: ' + e.message);
-            }
+        gs.info('AUTH API: Request body received: ' + bodyContent.substring(0, 100));
+        gs.info('AUTH API: Credentials parsed: ' + (credentials ? 'Yes' : 'No'));
+        if (credentials) {
+            gs.info('AUTH API: Has username: ' + (credentials.username ? 'Yes' : 'No'));
+            gs.info('AUTH API: Has password: ' + (credentials.password ? 'Yes' : 'No'));
         }
-        
-        gs.info('AUTH API: Credentials received: ' + (credentials ? 'Yes' : 'No'));
         
         if (!credentials || !credentials.username || !credentials.password) {
             gs.info('AUTH API: Missing credentials');
