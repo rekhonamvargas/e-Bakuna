@@ -51,14 +51,14 @@ function parseRequestBody(request) {
 }
 
 /**
- * LOGIN - Query credentials table directly
+ * LOGIN - Direct sys_user query with phone field for password
  */
 export function authenticateUser(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
     
     try {
-        gs.info('===== LOGIN START (v2) =====');
+        gs.info('===== LOGIN START =====');
         
         const credentials = parseRequestBody(request);
         
@@ -75,31 +75,39 @@ export function authenticateUser(request, response) {
         const password = credentials.password.toString().trim();
         
         gs.info('USERNAME: [' + username + ']');
-        gs.info('PASSWORD: [' + password.substring(0, 10) + '...]');
+        gs.info('PASSWORD LENGTH: ' + password.length);
         
         // Encode received password
         const encodedReceivedPassword = encodeBase64(password);
-        gs.info('ENCODED PASSWORD: [' + encodedReceivedPassword.substring(0, 20) + '...]');
         
-        // Query credentials table DIRECTLY
-        const creds = new GlideRecord('x_2009786_vaccinat_credentials');
-        creds.addQuery('username', username);
-        creds.query();
+        // Query sys_user
+        const user = new GlideRecord('sys_user');
+        user.addQuery('user_name', username);
+        user.query();
         
-        if (!creds.next()) {
-            gs.error('CREDENTIALS NOT FOUND for ' + username);
-            response.setStatus(401);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Invalid credentials'
-            }));
-            return;
+        if (!user.next()) {
+            // Try email too
+            user.clearQuery();
+            user.addQuery('email', username);
+            user.query();
+            
+            if (!user.next()) {
+                gs.error('USER NOT FOUND: ' + username);
+                response.setStatus(401);
+                response.getStreamWriter().writeString(JSON.stringify({
+                    status: 'error',
+                    error: 'Invalid credentials'
+                }));
+                return;
+            }
         }
         
-        const storedEncodedPassword = creds.getValue('password') || '';
-        gs.info('STORED ENCODED: [' + storedEncodedPassword.substring(0, 20) + '...]');
+        gs.info('USER FOUND');
         
-        // Direct comparison of Base64 values
+        // Password is stored in phone_number field (Base64 encoded)
+        const storedEncodedPassword = user.getValue('phone_number') || '';
+        gs.info('STORED PASSWORD LENGTH: ' + storedEncodedPassword.length);
+        
         const passwordMatches = (encodedReceivedPassword === storedEncodedPassword);
         gs.info('PASSWORD MATCH: ' + passwordMatches);
         
@@ -113,24 +121,9 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        // Get user info
-        const userId = creds.getValue('sys_user_id');
-        const user = new GlideRecord('sys_user');
-        user.get(userId);
-        
-        if (!user.isValid()) {
-            gs.error('USER NOT FOUND: ' + userId);
-            response.setStatus(401);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Invalid credentials'
-            }));
-            return;
-        }
-        
         gs.info('✓ LOGIN SUCCESS for ' + username);
         
-        // Get role from description or default to citizen
+        // Get role from description
         const description = user.getValue('description') || '';
         let role = 'citizen';
         if (description && description.indexOf('ROLE:') === 0) {
@@ -163,14 +156,14 @@ export function authenticateUser(request, response) {
 }
 
 /**
- * REGISTER - Create user AND store credentials in separate table
+ * REGISTER - Create user with password in phone_number field
  */
 export function registerUser(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
     
     try {
-        gs.info('===== REGISTER START (v2) =====');
+        gs.info('===== REGISTER START =====');
         
         const data = parseRequestBody(request);
         
@@ -185,7 +178,7 @@ export function registerUser(request, response) {
         
         const role = data.role || 'citizen';
         gs.info('USERNAME: [' + data.username + ']');
-        gs.info('PASSWORD: [' + data.password.substring(0, 10) + '...]');
+        gs.info('PASSWORD LENGTH: ' + data.password.length);
         gs.info('EMAIL: [' + data.email + ']');
         gs.info('ROLE: [' + role + ']');
         
@@ -203,7 +196,11 @@ export function registerUser(request, response) {
             return;
         }
         
-        // Create sys_user
+        // Encode password BEFORE insert
+        const encodedPassword = encodeBase64(data.password);
+        gs.info('PASSWORD ENCODED: length=' + encodedPassword.length);
+        
+        // Create sys_user with password in phone_number field
         const newUser = new GlideRecord('sys_user');
         newUser.initialize();
         newUser.setValue('user_name', data.username);
@@ -212,6 +209,7 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
         newUser.setValue('description', 'ROLE:' + role);
+        newUser.setValue('phone_number', encodedPassword); // PASSWORD STORED HERE
         
         const userId = newUser.insert();
         gs.info('USER CREATED: ID=' + userId);
@@ -226,40 +224,16 @@ export function registerUser(request, response) {
             return;
         }
         
-        // Encode password
-        const encodedPassword = encodeBase64(data.password);
-        gs.info('PASSWORD ENCODED: length=' + encodedPassword.length);
-        
-        // Store credentials in SEPARATE table
-        const credRecord = new GlideRecord('x_2009786_vaccinat_credentials');
-        credRecord.initialize();
-        credRecord.setValue('username', data.username);
-        credRecord.setValue('password', encodedPassword);
-        credRecord.setValue('sys_user_id', userId);
-        
-        const credId = credRecord.insert();
-        gs.info('CREDENTIALS STORED: ID=' + credId);
-        
-        if (!credId) {
-            gs.error('CREDENTIALS INSERT FAILED');
-            response.setStatus(500);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Failed to store credentials'
-            }));
-            return;
-        }
-        
-        // Verify
-        const verify = new GlideRecord('x_2009786_vaccinat_credentials');
-        verify.get(credId);
-        const storedPwd = verify.getValue('password') || '';
+        // Verify password was stored
+        const verify = new GlideRecord('sys_user');
+        verify.get(userId);
+        const storedPwd = verify.getValue('phone_number') || '';
         gs.info('VERIFICATION: Stored password length=' + storedPwd.length);
         
         if (storedPwd === encodedPassword) {
-            gs.info('✓ CREDENTIALS VERIFIED');
+            gs.info('✓ PASSWORD VERIFIED IN PHONE_NUMBER FIELD');
         } else {
-            gs.error('❌ CREDENTIALS NOT VERIFIED');
+            gs.error('❌ PASSWORD NOT VERIFIED - stored=' + storedPwd.substring(0, 20) + '... expected=' + encodedPassword.substring(0, 20) + '...');
         }
         
         gs.info('✓ REGISTER SUCCESS for ' + data.username);
