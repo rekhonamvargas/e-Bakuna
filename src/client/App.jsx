@@ -61,7 +61,7 @@ export default function App() {
     } else if (normalizedDescription.includes('staff')) {
         setCurrentPage('staff-dashboard');
     } else {
-      setCurrentPage('citizen-dashboard');
+      setCurrentPage('login');
     }
   };
 

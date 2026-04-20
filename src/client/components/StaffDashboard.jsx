@@ -3,6 +3,19 @@ import { EBakunaService } from '../services/EBakunaService.js';
 import './StaffDashboard.css';
 
 export default function StaffDashboard({ user, onLogout, hideLogout = false, hideHeader = false }) {
+  const normalizedRoles = Array.isArray(user?.roles)
+    ? user.roles.map((r) => (r || '').toString().toLowerCase())
+    : [];
+  const isStaff = normalizedRoles.some((r) => r.includes('staff') || r.includes('clinic_staff'));
+
+  if (user && !isStaff) {
+    return (
+      <div className="staff-dashboard" style={{ padding: '40px' }}>
+        <div className="error-box">Access denied: Clinic Staff dashboard only.</div>
+      </div>
+    );
+  }
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);

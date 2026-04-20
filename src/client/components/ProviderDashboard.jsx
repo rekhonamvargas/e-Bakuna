@@ -3,6 +3,19 @@ import { EBakunaService } from '../services/EBakunaService.js';
 import './StaffDashboard.css';
 
 export default function ProviderDashboard({ user, onLogout, hideLogout = false, hideHeader = false }) {
+  const normalizedRoles = Array.isArray(user?.roles)
+    ? user.roles.map((r) => (r || '').toString().toLowerCase())
+    : [];
+  const isProvider = normalizedRoles.some((r) => r.includes('provider'));
+
+  if (user && !isProvider) {
+    return (
+      <div className="staff-dashboard" style={{ padding: '40px' }}>
+        <div className="error-box">Access denied: Provider dashboard only.</div>
+      </div>
+    );
+  }
+
   const [clinics, setClinics] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [bookings, setBookings] = useState([]);

@@ -2,6 +2,19 @@ import React, { useState, useEffect } from 'react';
 import './BookingPortal.css';
 
 export default function BookingPortal({ user, onLogout, hideLogout = false, hideHeader = false }) {
+  const normalizedRoles = Array.isArray(user?.roles)
+    ? user.roles.map((r) => (r || '').toString().toLowerCase())
+    : [];
+  const isCitizen = normalizedRoles.some((r) => r.includes('citizen'));
+
+  if (user && !isCitizen) {
+    return (
+      <div className="booking-portal" style={{ padding: '40px' }}>
+        <div className="error-box">Access denied: Citizen dashboard only.</div>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'track'
   const [stats, setStats] = useState({
     citizensBooked: 0,
