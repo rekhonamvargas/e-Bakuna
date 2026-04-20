@@ -83,10 +83,53 @@ function parseRequestBody(request) {
                 if (Object.keys(asForm).length > 0) return asForm;
             }
 
-            // Some runtimes wrap the raw body in request.body.data
-            if (request.body.data && typeof request.body.data === 'string') {
-                const asForm = parseUrlEncodedForm(request.body.data);
-                if (Object.keys(asForm).length > 0) return asForm;
+            // Scripted REST commonly uses request.body.data (object) or request.body.dataString (string)
+            if (request.body.data) {
+                if (typeof request.body.data === 'string') {
+                    // Could be JSON or urlencoded
+                    const raw = request.body.data;
+                    const trimmed = raw.trim();
+                    if (trimmed && (trimmed[0] === '{' || trimmed[0] === '[')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            if (parsed && typeof parsed === 'object') return parsed;
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                    const asForm = parseUrlEncodedForm(raw);
+                    if (Object.keys(asForm).length > 0) return asForm;
+                }
+
+                if (typeof request.body.data === 'object') {
+                    // Best-effort convert to plain JS object (avoid Java objects w/ no enumerable keys)
+                    try {
+                        const json = JSON.stringify(request.body.data);
+                        const parsed = JSON.parse(json);
+                        if (parsed && typeof parsed === 'object') return parsed;
+                    } catch (e) {
+                        // If JSON stringify fails, attempt to read enumerable keys
+                        const obj = {};
+                        for (const k in request.body.data) {
+                            obj[k] = request.body.data[k];
+                        }
+                        if (Object.keys(obj).length > 0) return obj;
+                    }
+                }
+            }
+
+            if (request.body.dataString && typeof request.body.dataString === 'string') {
+                const raw = request.body.dataString;
+                const trimmed = raw.trim();
+                if (trimmed) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (parsed && typeof parsed === 'object') return parsed;
+                    } catch (e) {
+                        const asForm = parseUrlEncodedForm(raw);
+                        if (Object.keys(asForm).length > 0) return asForm;
+                    }
+                }
             }
 
             // If it's already an object (e.g., JSON)
