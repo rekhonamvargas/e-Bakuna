@@ -6,7 +6,6 @@ export default function Registration({ onNavigate }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     username: '',
     password: '',
     confirmPassword: '',
@@ -41,12 +40,6 @@ export default function Registration({ onNavigate }) {
 
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
     }
 
     if (!formData.username.trim()) {
@@ -85,7 +78,6 @@ export default function Registration({ onNavigate }) {
       await authService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
         username: formData.username,
         password: formData.password,
         role: formData.role
@@ -100,7 +92,6 @@ export default function Registration({ onNavigate }) {
       setFormData({
         firstName: '',
         lastName: '',
-        email: '',
         username: '',
         password: '',
         confirmPassword: '',
@@ -175,23 +166,6 @@ export default function Registration({ onNavigate }) {
                 />
                 {errors.lastName && <span className="field-error">{errors.lastName}</span>}
               </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">
-                Email Address <span className="required">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className={`form-input ${errors.email ? 'error' : ''}`}
-                placeholder="your.email@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={loading}
-              />
-              {errors.email && <span className="field-error">{errors.email}</span>}
             </div>
 
             <div className="form-group">

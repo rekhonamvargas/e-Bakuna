@@ -115,10 +115,14 @@ export class AuthService {
     console.log('📝 Registering user:', userData.username);
     
     try {
+      const username = (userData.username || '').trim();
+      const providedEmail = (userData.email || '').trim();
+      const fallbackEmail = username.includes('@') ? username : `${username}@ebakuna.local`;
+
       const requestData = {
-        username: userData.username.trim(),
+        username,
         password: userData.password,
-        email: userData.email.trim(),
+        email: providedEmail || fallbackEmail,
         firstName: userData.firstName.trim(),
         lastName: userData.lastName.trim(),
         role: userData.role || 'citizen'
