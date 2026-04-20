@@ -94,23 +94,42 @@ export function authenticateUser(request, response) {
             }));
             return;
         }
-        // Retrieve stored credentials from notes field
-        // Format: PWD_HASH:::{password}
-        const notes = user.getValue('notes') || '';
-        gs.info('LOGIN: Notes field length: ' + notes.length);
-        
+        // Retrieve stored credentials
+        // Try custom field first (if created), then notes field
         let storedPassword = '';
-        if (notes.indexOf('PWD_HASH:::') === 0) {
-            storedPassword = notes.substring(11); // Remove 'PWD_HASH:::' prefix
-            gs.info('LOGIN: Extracted password from notes - length: ' + storedPassword.length);
-        } else {
-            gs.warn('LOGIN: Password not found in notes field');
+        
+        // Method 1: Try custom password field if it exists
+        try {
+            storedPassword = user.getValue('x_2009786_vaccinat_pwd') || '';
+            if (storedPassword) {
+                gs.info('LOGIN: Found password in custom field');
+            }
+        } catch (e) {
+            gs.info('LOGIN: Custom field not available: ' + e.message);
         }
         
-        gs.info('LOGIN: Comparing - received: ' + password.length + ' chars, stored: ' + storedPassword.length + ' chars');
+        // Method 2: If custom field empty, try notes field
+        if (!storedPassword) {
+            const notes = user.getValue('notes') || '';
+            if (notes.indexOf('PWD_HASH:::') === 0) {
+                storedPassword = notes.substring(11);
+                gs.info('LOGIN: Found password in notes field');
+            } else if (notes.length > 0) {
+                // If no prefix, assume entire notes is password (backward compat)
+                storedPassword = notes;
+                gs.info('LOGIN: Using notes content as password');
+            }
+        }
+        
+        gs.info('LOGIN: Password verification:');
+        gs.info('  Received: ' + password.length + ' chars');
+        gs.info('  Stored: ' + storedPassword.length + ' chars');
+        gs.info('  Received first 5: [' + password.substring(0, 5) + ']');
+        gs.info('  Stored first 5: [' + storedPassword.substring(0, 5) + ']');
         
         if (!storedPassword || storedPassword !== password) {
-            gs.error('LOGIN: Password mismatch for ' + username);
+            gs.error('LOGIN: Password mismatch - login failed');
+            gs.error('  Match result: ' + (password === storedPassword));
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -119,7 +138,7 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        gs.info('LOGIN: ✓ Password verified successfully for ' + username);
+        gs.info('LOGIN: ✓ Password verified successfully');
         
         gs.info('LOGIN: ✓ Password verified for ' + username);
         
@@ -268,16 +287,20 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
         
-        // Store password in notes field (reliable, no size limits)
-        // Format: PWD_HASH:::{password}
-        const pwdStorage = 'PWD_HASH:::' + data.password;
-        newUser.setValue('notes', pwdStorage);
+        // Store password - try custom field first, fallback to notes
+        try {
+            newUser.setValue('x_2009786_vaccinat_pwd', data.password);
+            gs.info('REGISTER: Password stored in custom field');
+        } catch (e) {
+            // If custom field doesn't exist, store in notes
+            newUser.setValue('notes', data.password);
+            gs.info('REGISTER: Password stored in notes field (custom field unavailable)');
+        }
         
-        // Store role in description for easy access
+        // Store role in description
         newUser.setValue('description', 'ROLE:' + role);
         
-        gs.info('REGISTER: Password storage prepared for ' + data.username);
-        gs.info('REGISTER: Storage length: ' + pwdStorage.length);
+        gs.info('REGISTER: User data prepared for ' + data.username);
         
         const userId = newUser.insert();
         
@@ -293,12 +316,22 @@ export function registerUser(request, response) {
         
         gs.info('✓ User registered: ' + data.username + ' (ID: ' + userId + ')');
         
-        // Verify the user was created and password was saved
+        // Verify the user was created
         const verifyUser = new GlideRecord('sys_user');
         verifyUser.get(userId);
-        const savedNotes = verifyUser.getValue('notes') || '';
-        const savedDesc = verifyUser.getValue('description') || '';
-        gs.info('REGISTER: Verification - notes length: ' + savedNotes.length + ', description: ' + savedDesc);
+        gs.info('REGISTER: Verification - user retrieved successfully');
+        
+        // Try to verify password was stored
+        let pwdCheckField = '';
+        try {
+            pwdCheckField = verifyUser.getValue('x_2009786_vaccinat_pwd') || '';
+        } catch (e) {
+            gs.info('REGISTER: Custom field check failed');
+        }
+        
+        const pwdCheckNotes = verifyUser.getValue('notes') || '';
+        gs.info('REGISTER: Custom field length: ' + pwdCheckField.length);
+        gs.info('REGISTER: Notes field length: ' + pwdCheckNotes.length);
         
         // Fetch the new user to return complete info
         const user = new GlideRecord('sys_user');
