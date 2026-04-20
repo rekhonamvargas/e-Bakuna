@@ -23,7 +23,7 @@ export default function App() {
       
       if (user) {
         setCurrentUser(user);
-        routeByRole(user.roles);
+        routeByRole(user.roles, user.description);
       } else {
         setCurrentPage('login');
       }
@@ -35,13 +35,27 @@ export default function App() {
     }
   };
 
-  const routeByRole = (roles) => {
-    if (roles.includes('x_2009786_vaccinat.provider')) {
-      setCurrentPage('provider-dashboard');
-    } else if (roles.includes('x_2009786_vaccinat.clinic_staff')) {
-      setCurrentPage('staff-dashboard');
-    } else if (roles.includes('x_2009786_vaccinat.citizen')) {
-      setCurrentPage('citizen-dashboard');
+  const routeByRole = (roles, description) => {
+    // Check standard roles first
+    if (roles && roles.length > 0) {
+      if (roles.includes('x_2009786_vaccinat.provider')) {
+        setCurrentPage('provider-dashboard');
+      } else if (roles.includes('x_2009786_vaccinat.clinic_staff')) {
+        setCurrentPage('staff-dashboard');
+      } else if (roles.includes('x_2009786_vaccinat.citizen')) {
+        setCurrentPage('citizen-dashboard');
+      } else {
+        setCurrentPage('login');
+      }
+    } else if (description && description.includes('EBAKUNA_ROLE:')) {
+      // Fallback to description field if no roles assigned
+      if (description.includes('EBAKUNA_ROLE:staff')) {
+        setCurrentPage('staff-dashboard');
+      } else if (description.includes('EBAKUNA_ROLE:citizen')) {
+        setCurrentPage('citizen-dashboard');
+      } else {
+        setCurrentPage('login');
+      }
     } else {
       setCurrentPage('login');
     }
@@ -49,7 +63,7 @@ export default function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
-    routeByRole(user.roles);
+    routeByRole(user.roles, user.description);
   };
 
   const handleLogout = async () => {

@@ -69,8 +69,6 @@ export default function EBakunaApp() {
       <div className="app-container">
         <header className="app-header">
           <h1>🏥 E-Bakuna</h1>
-          <p>COVID-19 Vaccination Management System</p>
-          <p>Cebu City Health Office</p>
         </header>
         {currentPage === 'login' ? (
           <Login onLogin={handleLogin} onNavigate={handleNavigate} />

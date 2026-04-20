@@ -123,6 +123,7 @@ export function authenticateUser(request, response) {
             first_name: user.getValue('first_name') || '',
             last_name: user.getValue('last_name') || '',
             email: user.getValue('email') || '',
+            description: user.getValue('description') || '',
             roles: getRoles(user.getUniqueValue())
         };
         
