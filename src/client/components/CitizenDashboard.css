@@ -75,7 +75,7 @@
   color: #fecaca;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Merriweather', serif;
 }
 
 .hero-title {
@@ -117,7 +117,7 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Merriweather', serif;
   letter-spacing: 0.02em;
   box-shadow: 0 6px 20px rgba(255,255,255,0.2);
   transition: all 0.3s ease;
@@ -136,7 +136,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Merriweather', serif;
   transition: all 0.3s ease;
 }
 

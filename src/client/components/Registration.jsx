@@ -14,7 +14,7 @@ export default function Registration({ onNavigate }) {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,7 +91,11 @@ export default function Registration({ onNavigate }) {
         role: formData.role
       });
       
-      setShowSuccess(true);
+      setSuccessMessage('✅ Registration successful! Redirecting to login...');
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        onNavigate('login');
+      }, 2000);
       // Reset form
       setFormData({
         firstName: '',
@@ -111,27 +115,6 @@ export default function Registration({ onNavigate }) {
     }
   };
 
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    onNavigate('login');
-  };
-
-  if (showSuccess) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <div className="success-icon">✅</div>
-          <h3 className="success-title">Registration Successful!</h3>
-          <p className="success-message">
-            Your account has been created successfully. You can now log in with your credentials.
-          </p>
-          <button className="btn-primary" onClick={handleSuccessClose}>
-            Continue to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="registration-container">
@@ -144,6 +127,12 @@ export default function Registration({ onNavigate }) {
 
         {/* Form */}
         <div className="registration-body">
+          {successMessage && (
+            <div className="success-notification">
+              {successMessage}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="registration-form">
             {/* General error */}
             {errors.general && (

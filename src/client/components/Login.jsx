@@ -90,13 +90,6 @@ export default function Login({ onLogin, onNavigate }) {
         </form>
 
         <div className="login-footer">
-          <div className="test-accounts">
-            <p><strong>Test Accounts:</strong></p>
-            <p>📧 survey.user@email.com</p>
-            <p>📧 lucius.bagnoli@example.com</p>
-            <small className="text-gray-500">Use any password for testing</small>
-          </div>
-          
           <div className="register-link-section">
             <p className="register-text">
               Don't have an account?{' '}
