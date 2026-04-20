@@ -180,6 +180,10 @@ declare global {
                         table: 'sys_module'
                         id: '433832146696420a9ac9edbf633a1f91'
                     }
+                    'src_server_credentials-store_js': {
+                        table: 'sys_module'
+                        id: '6b303528b10640bab7e143b407f84868'
+                    }
                 }
                 composite: [
                     {
