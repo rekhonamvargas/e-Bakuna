@@ -76,66 +76,59 @@ function parseUrlEncodedForm(formBody) {
  */
 function parseRequestBody(request) {
     try {
-        if (request.body) {
-            // Fluent / Scripted REST can give us a string body for x-www-form-urlencoded
-            if (typeof request.body === 'string') {
-                const asForm = parseUrlEncodedForm(request.body);
-                if (Object.keys(asForm).length > 0) return asForm;
-            }
-
-            // Scripted REST commonly uses request.body.data (object) or request.body.dataString (string)
-            if (request.body.data) {
-                if (typeof request.body.data === 'string') {
-                    // Could be JSON or urlencoded
-                    const raw = request.body.data;
-                    const trimmed = raw.trim();
-                    if (trimmed && (trimmed[0] === '{' || trimmed[0] === '[')) {
-                        try {
-                            const parsed = JSON.parse(trimmed);
-                            if (parsed && typeof parsed === 'object') return parsed;
-                        } catch (e) {
-                            // ignore
-                        }
-                    }
-                    const asForm = parseUrlEncodedForm(raw);
-                    if (Object.keys(asForm).length > 0) return asForm;
-                }
-
-                if (typeof request.body.data === 'object') {
-                    // Best-effort convert to plain JS object (avoid Java objects w/ no enumerable keys)
-                    try {
-                        const json = JSON.stringify(request.body.data);
-                        const parsed = JSON.parse(json);
-                        if (parsed && typeof parsed === 'object') return parsed;
-                    } catch (e) {
-                        // If JSON stringify fails, attempt to read enumerable keys
-                        const obj = {};
-                        for (const k in request.body.data) {
-                            obj[k] = request.body.data[k];
-                        }
-                        if (Object.keys(obj).length > 0) return obj;
-                    }
-                }
-            }
-
-            if (request.body.dataString && typeof request.body.dataString === 'string') {
-                const raw = request.body.dataString;
-                const trimmed = raw.trim();
-                if (trimmed) {
+        const readObject = (candidate) => {
+            if (!candidate) return null;
+            if (typeof candidate === 'string') {
+                const trimmed = candidate.trim();
+                if (!trimmed) return null;
+                if (trimmed[0] === '{' || trimmed[0] === '[') {
                     try {
                         const parsed = JSON.parse(trimmed);
                         if (parsed && typeof parsed === 'object') return parsed;
                     } catch (e) {
-                        const asForm = parseUrlEncodedForm(raw);
-                        if (Object.keys(asForm).length > 0) return asForm;
+                        // ignore
                     }
                 }
+                const asForm = parseUrlEncodedForm(candidate);
+                if (Object.keys(asForm).length > 0) return asForm;
+                return null;
             }
 
-            // If it's already an object (e.g., JSON)
-            if (typeof request.body === 'object' && Object.keys(request.body).length > 0) {
-                return request.body;
+            if (typeof candidate === 'object') {
+                try {
+                    const json = JSON.stringify(candidate);
+                    if (json && json !== '{}' && json !== '[]') {
+                        const parsed = JSON.parse(json);
+                        if (parsed && typeof parsed === 'object') return parsed;
+                    }
+                } catch (e) {
+                    // ignore and fall through
+                }
+
+                const obj = {};
+                for (const k in candidate) {
+                    obj[k] = candidate[k];
+                }
+                if (Object.keys(obj).length > 0) return obj;
             }
+
+            return null;
+        };
+
+        if (request.body) {
+            // Common Scripted REST shapes first.
+            const bodyData = readObject(request.body.data);
+            if (bodyData) return bodyData;
+
+            const bodyString = readObject(request.body.dataString);
+            if (bodyString) return bodyString;
+
+            const rawBody = readObject(request.body.body);
+            if (rawBody) return rawBody;
+
+            // Then the wrapper itself (only if it already looks like the payload).
+            const wrapper = readObject(request.body);
+            if (wrapper) return wrapper;
         }
         
         if (request.queryParams && Object.keys(request.queryParams).length > 0) {

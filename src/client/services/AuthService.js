@@ -105,26 +105,18 @@ export class AuthService {
         lastName: userData.lastName.trim(),
         role: userData.role || 'citizen'
       };
-      
-      // Send as query parameters (workaround for body parsing issue)
-      const params = new URLSearchParams();
-      params.append('username', requestData.username);
-      params.append('password', requestData.password);
-      params.append('email', requestData.email);
-      params.append('firstName', requestData.firstName);
-      params.append('lastName', requestData.lastName);
-      params.append('role', requestData.role);
-      
-      const url = `${this.authApiUrl}/register?${params.toString()}`;
+
+      const url = `${this.authApiUrl}/register`;
       console.log('POST to:', url);
-      console.log('Payload via query params:', { ...requestData, password: '***' });
+      console.log('Payload via JSON:', { ...requestData, password: '***' });
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify(requestData)
       });
 
       console.log('Response status:', response.status);
