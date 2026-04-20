@@ -1,6 +1,32 @@
 import { gs, GlideRecord } from '@servicenow/glide';
 
 /**
+ * Base64 encoding helper
+ */
+function encodeBase64(str) {
+    try {
+        const bytes = str ? new java.lang.String(str).getBytes('UTF-8') : [];
+        return java.util.Base64.getEncoder().encodeToString(bytes);
+    } catch (e) {
+        gs.error('Base64 encode error: ' + e.message);
+        return str; // Return original if encoding fails
+    }
+}
+
+/**
+ * Base64 decoding helper
+ */
+function decodeBase64(str) {
+    try {
+        const decodedBytes = java.util.Base64.getDecoder().decode(str);
+        return new java.lang.String(decodedBytes, 'UTF-8');
+    } catch (e) {
+        gs.error('Base64 decode error: ' + e.message);
+        return str; // Return original if decoding fails
+    }
+}
+
+/**
  * Extract request body - from POST body or query params
  */
 function parseRequestBody(request) {
@@ -104,12 +130,23 @@ export function authenticateUser(request, response) {
         // Method 1: Try custom field x_2009786_vaccinat_pwd
         let storedPassword = '';
         let storageLocation = 'UNKNOWN';
+        let isBase64 = false;
         
         try {
-            storedPassword = user.getValue('x_2009786_vaccinat_pwd') || '';
-            if (storedPassword && storedPassword.length > 0) {
-                storageLocation = 'CUSTOM_FIELD';
-                gs.info('FOUND PASSWORD IN CUSTOM FIELD: length=' + storedPassword.length);
+            const customFieldValue = user.getValue('x_2009786_vaccinat_pwd') || '';
+            if (customFieldValue && customFieldValue.length > 0) {
+                // Try to decode as Base64
+                try {
+                    storedPassword = decodeBase64(customFieldValue);
+                    isBase64 = true;
+                    storageLocation = 'CUSTOM_FIELD(Base64)';
+                    gs.info('FOUND PASSWORD IN CUSTOM FIELD (Base64): length=' + storedPassword.length);
+                } catch (e) {
+                    // If not Base64, use as-is
+                    storedPassword = customFieldValue;
+                    storageLocation = 'CUSTOM_FIELD(Plain)';
+                    gs.info('FOUND PASSWORD IN CUSTOM FIELD (Plain): length=' + storedPassword.length);
+                }
             }
         } catch (e) {
             gs.info('Custom field access error: ' + e.message);
@@ -117,29 +154,45 @@ export function authenticateUser(request, response) {
         
         // Method 2: Try notes field
         if (!storedPassword || storedPassword.length === 0) {
-            const notes = user.getValue('notes') || '';
-            gs.info('NOTES FIELD: [' + notes + '] (len=' + notes.length + ')');
-            if (notes && notes.length > 0) {
-                storedPassword = notes;
-                storageLocation = 'NOTES_FIELD';
-                gs.info('USING PASSWORD FROM NOTES: length=' + storedPassword.length);
+            const notesValue = user.getValue('notes') || '';
+            gs.info('NOTES FIELD: [' + notesValue.substring(0, 30) + '...] (len=' + notesValue.length + ')');
+            if (notesValue && notesValue.length > 0) {
+                // Try to decode as Base64
+                try {
+                    storedPassword = decodeBase64(notesValue);
+                    isBase64 = true;
+                    storageLocation = 'NOTES_FIELD(Base64)';
+                    gs.info('USING PASSWORD FROM NOTES (Base64): length=' + storedPassword.length);
+                } catch (e) {
+                    // If not Base64, use as-is
+                    storedPassword = notesValue;
+                    storageLocation = 'NOTES_FIELD(Plain)';
+                    gs.info('USING PASSWORD FROM NOTES (Plain): length=' + storedPassword.length);
+                }
             }
         }
         
         // Method 3: Try description field (backup format)
         if (!storedPassword || storedPassword.length === 0) {
             const description = user.getValue('description') || '';
-            gs.info('DESCRIPTION FIELD: [' + description + '] (len=' + description.length + ')');
+            gs.info('DESCRIPTION FIELD: [' + description.substring(0, 30) + '...] (len=' + description.length + ')');
             
-            // Try new backup format: PWD:password|ROLE:role
+            // Try new backup format: PWD:base64password|ROLE:role
             if (description && description.indexOf('PWD:') === 0) {
                 try {
                     const parts = description.split('|');
                     if (parts[0].indexOf('PWD:') === 0) {
-                        storedPassword = parts[0].substring(4); // Extract after "PWD:"
-                        if (storedPassword && storedPassword.length > 0) {
-                            storageLocation = 'DESCRIPTION_BACKUP';
-                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP: length=' + storedPassword.length);
+                        const encodedPwd = parts[0].substring(4); // Extract after "PWD:"
+                        try {
+                            storedPassword = decodeBase64(encodedPwd);
+                            isBase64 = true;
+                            storageLocation = 'DESCRIPTION_BACKUP(Base64)';
+                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP (Base64): length=' + storedPassword.length);
+                        } catch (e) {
+                            // If not Base64, use as-is
+                            storedPassword = encodedPwd;
+                            storageLocation = 'DESCRIPTION_BACKUP(Plain)';
+                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP (Plain): length=' + storedPassword.length);
                         }
                     }
                 } catch (e) {
@@ -172,10 +225,26 @@ export function authenticateUser(request, response) {
         
         if (!storedPassword || storedPassword.length === 0) {
             gs.error('NO PASSWORD FOUND IN ANY STORAGE LOCATION');
+            
+            // Get diagnostic info about what we found
+            const notes = user.getValue('notes') || '';
+            const description = user.getValue('description') || '';
+            let customField = '';
+            try {
+                customField = user.getValue('x_2009786_vaccinat_pwd') || '';
+            } catch (e) {}
+            
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Invalid credentials'
+                error: 'Invalid credentials',
+                diagnostic: {
+                    userFound: true,
+                    notesLength: notes.length,
+                    customFieldLength: customField.length,
+                    descriptionLength: description.length,
+                    descriptionStart: description.substring(0, 50)
+                }
             }));
             return;
         }
@@ -369,22 +438,32 @@ export function registerUser(request, response) {
         newUser.setValue('active', true);
         
         // IMPORTANT: Store password ONLY in notes field (most reliable)
-        newUser.setValue('notes', data.password);
-        gs.info('PASSWORD STORED IN NOTES FIELD');
+        // Use Base64 encoding to ensure reliable storage
+        const encodedPassword = encodeBase64(data.password);
+        newUser.setValue('notes', encodedPassword);
+        gs.info('PASSWORD STORED IN NOTES (Base64): length=' + encodedPassword.length);
+        
+        // Verify it was set BEFORE insert
+        const testNotesValue = newUser.getValue('notes') || '';
+        gs.info('PRE-INSERT CHECK - notes field has: [' + testNotesValue.substring(0, 30) + '...] (len=' + testNotesValue.length + ')');
         
         // Also try custom field (with fallback handling)
         try {
-            newUser.setValue('x_2009786_vaccinat_pwd', data.password);
-            gs.info('PASSWORD ALSO STORED IN CUSTOM FIELD');
+            newUser.setValue('x_2009786_vaccinat_pwd', encodedPassword);
+            gs.info('PASSWORD ALSO STORED IN CUSTOM FIELD (Base64)');
+            const testCustomValue = newUser.getValue('x_2009786_vaccinat_pwd') || '';
+            gs.info('PRE-INSERT CHECK - custom field has: [' + testCustomValue.substring(0, 30) + '...] (len=' + testCustomValue.length + ')');
         } catch (e) {
             gs.info('Custom field not available: ' + e.message);
         }
         
         // BACKUP: Also store in description for absolute certainty
-        // Format: PWD:password|ROLE:role
-        const descriptionBackup = 'PWD:' + data.password + '|ROLE:' + role;
+        // Format: PWD:base64password|ROLE:role
+        const descriptionBackup = 'PWD:' + encodedPassword + '|ROLE:' + role;
         newUser.setValue('description', descriptionBackup);
-        gs.info('PASSWORD ALSO STORED IN DESCRIPTION FIELD (BACKUP)');
+        gs.info('PASSWORD ALSO STORED IN DESCRIPTION (Base64)');
+        const testDescValue = newUser.getValue('description') || '';
+        gs.info('PRE-INSERT CHECK - description field has: [' + testDescValue.substring(0, 30) + '...] (len=' + testDescValue.length + ')');
         
         gs.info('USER DATA READY - INSERTING...');
         
@@ -416,35 +495,39 @@ export function registerUser(request, response) {
         const verifyDescription = verifyUser.getValue('description') || '';
         
         gs.info('VERIFICATION:');
-        gs.info('  NOTES field: [' + verifyNotes + '] (len=' + verifyNotes.length + ')');
-        gs.info('  CUSTOM field: [' + verifyCustom + '] (len=' + verifyCustom.length + ')');
-        gs.info('  DESCRIPTION field: [' + verifyDescription + '] (len=' + verifyDescription.length + ')');
+        gs.info('  NOTES field: [' + verifyNotes.substring(0, 30) + '...] (len=' + verifyNotes.length + ')');
+        gs.info('  CUSTOM field: [' + verifyCustom.substring(0, 30) + '...] (len=' + verifyCustom.length + ')');
+        gs.info('  DESCRIPTION field: [' + verifyDescription.substring(0, 30) + '...] (len=' + verifyDescription.length + ')');
         
         // Check if password was stored
         let passwordVerified = false;
         
-        if (verifyNotes === data.password) {
-            gs.info('✓✓✓ PASSWORD VERIFIED IN NOTES FIELD ✓✓✓');
+        // Check notes field (Base64 encoded)
+        if (verifyNotes === encodedPassword) {
+            gs.info('✓✓✓ PASSWORD VERIFIED IN NOTES FIELD (Base64) ✓✓✓');
             passwordVerified = true;
-        } else if (verifyCustom === data.password) {
-            gs.info('✓✓✓ PASSWORD VERIFIED IN CUSTOM FIELD ✓✓✓');
+        }
+        // Check custom field (Base64 encoded)
+        else if (verifyCustom === encodedPassword) {
+            gs.info('✓✓✓ PASSWORD VERIFIED IN CUSTOM FIELD (Base64) ✓✓✓');
             passwordVerified = true;
-        } else {
-            // Check backup format in description
-            const descriptionBackup = 'PWD:' + data.password + '|ROLE:' + role;
+        }
+        // Check backup format in description
+        else {
+            const descriptionBackup = 'PWD:' + encodedPassword + '|ROLE:' + role;
             if (verifyDescription === descriptionBackup) {
-                gs.info('✓✓✓ PASSWORD VERIFIED IN DESCRIPTION (BACKUP) ✓✓✓');
+                gs.info('✓✓✓ PASSWORD VERIFIED IN DESCRIPTION (BACKUP, Base64) ✓✓✓');
                 passwordVerified = true;
             }
         }
         
         if (!passwordVerified) {
-            gs.error('❌ PASSWORD NOT VERIFIED - Storage failed!');
-            gs.error('  Expected: [' + data.password + ']');
-            gs.error('  Expected in DESC: [' + descriptionBackup + ']');
-            gs.error('  Notes has: [' + verifyNotes + ']');
-            gs.error('  Custom has: [' + verifyCustom + ']');
-            gs.error('  Description has: [' + verifyDescription + ']');
+            gs.error('❌ PASSWORD NOT VERIFIED - Storage may have failed!');
+            gs.error('  Expected (encoded): [' + encodedPassword + ']');
+            gs.error('  Expected in DESC: [' + ('PWD:' + encodedPassword + '|ROLE:' + role) + ']');
+            gs.error('  Notes has: [' + verifyNotes.substring(0, 50) + '...]');
+            gs.error('  Custom has: [' + verifyCustom.substring(0, 50) + '...]');
+            gs.error('  Description has: [' + verifyDescription.substring(0, 50) + '...]');
         }
         
         // Fetch the new user to return complete info
