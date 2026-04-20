@@ -6,7 +6,8 @@ export default function StaffDashboard({ user, onLogout, hideLogout = false, hid
   const normalizedRoles = Array.isArray(user?.roles)
     ? user.roles.map((r) => (r || '').toString().toLowerCase())
     : [];
-  const isStaff = normalizedRoles.some((r) => r.includes('staff') || r.includes('clinic_staff'));
+  const normalizedDescription = (user?.description || '').toString().toLowerCase();
+  const isStaff = normalizedRoles.some((r) => r.includes('staff') || r.includes('clinic_staff')) || normalizedDescription.includes('staff');
 
   if (user && !isStaff) {
     return (

@@ -6,7 +6,8 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
   const normalizedRoles = Array.isArray(user?.roles)
     ? user.roles.map((r) => (r || '').toString().toLowerCase())
     : [];
-  const isProvider = normalizedRoles.some((r) => r.includes('provider'));
+  const normalizedDescription = (user?.description || '').toString().toLowerCase();
+  const isProvider = normalizedRoles.some((r) => r.includes('provider')) || normalizedDescription.includes('provider');
 
   if (user && !isProvider) {
     return (

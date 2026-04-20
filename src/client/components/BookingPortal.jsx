@@ -5,7 +5,8 @@ export default function BookingPortal({ user, onLogout, hideLogout = false, hide
   const normalizedRoles = Array.isArray(user?.roles)
     ? user.roles.map((r) => (r || '').toString().toLowerCase())
     : [];
-  const isCitizen = normalizedRoles.some((r) => r.includes('citizen'));
+  const normalizedDescription = (user?.description || '').toString().toLowerCase();
+  const isCitizen = normalizedRoles.some((r) => r.includes('citizen')) || normalizedDescription.includes('citizen');
 
   if (user && !isCitizen) {
     return (
