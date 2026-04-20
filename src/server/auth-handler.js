@@ -1,6 +1,75 @@
 import { gs, GlideRecord } from '@servicenow/glide';
 
 /**
+ * Extract and parse request body from Fluent SDK request object
+ * Tries multiple methods to get the request body
+ */
+function parseRequestBody(request) {
+    try {
+        gs.info('🔍 BEGIN parseRequestBody - checking all methods');
+        
+        // Method 1: Try request.body (some SDKs use this)
+        if (request.body) {
+            gs.info('✓ Method 1: request.body exists');
+            if (typeof request.body === 'string') {
+                gs.info('✓ Body is string: ' + request.body);
+                return JSON.parse(request.body);
+            } else if (typeof request.body === 'object') {
+                gs.info('✓ Body is object');
+                return request.body;
+            }
+        }
+        
+        // Method 2: Try getBodyAsString() - common in ServiceNow
+        if (request.getBodyAsString && typeof request.getBodyAsString === 'function') {
+            try {
+                const bodyStr = request.getBodyAsString();
+                gs.info('✓ Method 2: getBodyAsString() returned: ' + bodyStr);
+                if (bodyStr && bodyStr.length > 0) {
+                    return JSON.parse(bodyStr);
+                }
+            } catch (e) {
+                gs.error('✗ getBodyAsString failed: ' + e.message);
+            }
+        }
+        
+        // Method 3: Try to read from input stream
+        if (request.getInputStream && typeof request.getInputStream === 'function') {
+            try {
+                gs.info('✓ Method 3: Trying getInputStream()');
+                const inputStream = request.getInputStream();
+                if (inputStream) {
+                    const streamReader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream));
+                    let line;
+                    let bodyStr = '';
+                    while ((line = streamReader.readLine()) != null) {
+                        bodyStr += line;
+                    }
+                    gs.info('✓ Read from stream: ' + bodyStr);
+                    if (bodyStr && bodyStr.length > 0) {
+                        return JSON.parse(bodyStr);
+                    }
+                }
+            } catch (e) {
+                gs.error('✗ getInputStream method failed: ' + e.message);
+            }
+        }
+        
+        // Method 4: Check REST request object for payload
+        if (request.rest_payload) {
+            gs.info('✓ Method 4: Found rest_payload');
+            return JSON.parse(request.rest_payload);
+        }
+        
+        gs.warn('⚠️ No request body found using any method');
+        return null;
+    } catch (e) {
+        gs.error('❌ parseRequestBody error: ' + e.message);
+        return null;
+    }
+}
+
+/**
  * Authentication handler with login and registration support
  * @param {Object} request - REST API request
  * @param {Object} response - REST API response  
@@ -20,37 +89,7 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        let credentials = null;
-        
-        // TRY METHOD 1: Direct request.body (string)
-        if (request.body && typeof request.body === 'string') {
-            gs.info('✓ Method 1: request.body is string');
-            try {
-                credentials = JSON.parse(request.body);
-            } catch (e) {
-                gs.error('✗ Failed to parse body string: ' + e.message);
-            }
-        }
-        // TRY METHOD 2: request.body as object
-        else if (request.body && typeof request.body === 'object') {
-            gs.info('✓ Method 2: request.body is object');
-            credentials = request.body;
-        }
-        // TRY METHOD 3: Try to access via getParameter/getBodyAsString
-        else {
-            gs.warn('request.body not string/object, trying alternative methods');
-            if (typeof request.getBodyAsString === 'function') {
-                try {
-                    const bodyStr = request.getBodyAsString();
-                    gs.info('✓ Method 3: getBodyAsString() returned: ' + bodyStr.substring(0, 100));
-                    credentials = JSON.parse(bodyStr);
-                } catch (e) {
-                    gs.error('✗ getBodyAsString failed: ' + e.message);
-                }
-            }
-        }
-        
-        gs.info('Parsed credentials: ' + (credentials ? JSON.stringify(credentials).substring(0, 100) : 'null'));
+        const credentials = parseRequestBody(request);
         
         if (!credentials || !credentials.username || !credentials.password) {
             gs.info('❌ AUTH API: Missing credentials');
@@ -173,27 +212,18 @@ export function registerUser(request, response) {
             return;
         }
         
-        let data = null;
+        let data = parseRequestBody(request);
         
-        if (request.body && typeof request.body === 'string') {
-            try {
-                data = JSON.parse(request.body);
-            } catch (e) {
-                gs.error('✗ Failed to parse body: ' + e.message);
-            }
-        } else if (request.body && typeof request.body === 'object') {
-            data = request.body;
-        } else if (typeof request.getBodyAsString === 'function') {
-            try {
-                const bodyStr = request.getBodyAsString();
-                data = JSON.parse(bodyStr);
-            } catch (e) {
-                gs.error('✗ getBodyAsString failed: ' + e.message);
-            }
+        // DEBUG: Log what we got
+        gs.info('🔍 DEBUG: data is ' + (data ? 'present' : 'null/undefined'));
+        if (data) {
+            gs.info('🔍 DEBUG: data keys: ' + Object.keys(data).join(', '));
+            gs.info('🔍 DEBUG: Received: ' + JSON.stringify(data).substring(0, 300));
         }
         
         // Validate required fields
         if (!data || !data.username || !data.password || !data.email || !data.firstName || !data.lastName) {
+            gs.error('❌ REGISTER: Missing required fields. Got: ' + JSON.stringify(data));
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
