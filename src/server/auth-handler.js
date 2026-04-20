@@ -9,7 +9,7 @@ function encodeBase64(str) {
         return java.util.Base64.getEncoder().encodeToString(bytes);
     } catch (e) {
         gs.error('Base64 encode error: ' + e.message);
-        return str; // Return original if encoding fails
+        return str;
     }
 }
 
@@ -22,70 +22,43 @@ function decodeBase64(str) {
         return new java.lang.String(decodedBytes, 'UTF-8');
     } catch (e) {
         gs.error('Base64 decode error: ' + e.message);
-        return str; // Return original if decoding fails
+        return str;
     }
 }
 
 /**
- * Extract request body - from POST body or query params
+ * Parse request - from POST body or query params
  */
 function parseRequestBody(request) {
     try {
-        // Try POST body first
         if (request.body && Object.keys(request.body).length > 0) {
-            gs.info('✓ Data from POST body');
             return request.body;
         }
         
-        // Try query parameters (workaround for body parsing issues)
         if (request.queryParams && Object.keys(request.queryParams).length > 0) {
-            gs.info('✓ Data from queryParams');
-            return request.queryParams;
-        }
-        
-        // Try stream
-        if (request.getInputStream && typeof request.getInputStream === 'function') {
-            try {
-                const inputStream = request.getInputStream();
-                if (inputStream && inputStream.available && inputStream.available() > 0) {
-                    const scanner = new java.util.Scanner(inputStream).useDelimiter("\\A");
-                    const bodyStr = scanner.hasNext() ? scanner.next() : "";
-                    if (bodyStr && bodyStr.trim().length > 0) {
-                        gs.info('✓ Data from stream');
-                        return JSON.parse(bodyStr);
-                    }
-                }
-            } catch (e) {
-                gs.warn('Stream read failed');
+            const params = {};
+            for (const key in request.queryParams) {
+                params[key] = request.queryParams[key].toString();
             }
+            return params;
         }
         
         return null;
     } catch (e) {
-        gs.error('❌ parseRequestBody error: ' + e.message);
+        gs.error('parseRequestBody error: ' + e.message);
         return null;
     }
 }
 
 /**
- * Authentication handler with login and registration support
- * @param {Object} request - REST API request
- * @param {Object} response - REST API response  
+ * LOGIN - Query credentials table directly
  */
 export function authenticateUser(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('🔐 LOGIN - ' + new Date().toISOString());
-        
-        if (request.method === 'OPTIONS') {
-            response.setStatus(200);
-            response.getStreamWriter().writeString('{"status":"ok"}');
-            return;
-        }
+        gs.info('===== LOGIN START (v2) =====');
         
         const credentials = parseRequestBody(request);
         
@@ -93,7 +66,7 @@ export function authenticateUser(request, response) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Username and password are required'
+                error: 'Missing username or password'
             }));
             return;
         }
@@ -101,19 +74,20 @@ export function authenticateUser(request, response) {
         const username = credentials.username.toString().trim();
         const password = credentials.password.toString().trim();
         
-        gs.info('===== LOGIN START =====');
-        gs.info('USERNAME: [' + username + '] (len=' + username.length + ')');
-        gs.info('PASSWORD: [' + password + '] (len=' + password.length + ')');
+        gs.info('USERNAME: [' + username + ']');
+        gs.info('PASSWORD: [' + password.substring(0, 10) + '...]');
         
-        // Look up user - BOTH by username AND email
-        const user = new GlideRecord('sys_user');
-        user.addQuery('active', true);
-        const condition = user.addQuery('user_name', username);
-        condition.addOrCondition('email', username);
-        user.query();
+        // Encode received password
+        const encodedReceivedPassword = encodeBase64(password);
+        gs.info('ENCODED PASSWORD: [' + encodedReceivedPassword.substring(0, 20) + '...]');
         
-        if (!user.next()) {
-            gs.error('USER NOT FOUND: ' + username);
+        // Query credentials table DIRECTLY
+        const creds = new GlideRecord('x_2009786_vaccinat_credentials');
+        creds.addQuery('username', username);
+        creds.query();
+        
+        if (!creds.next()) {
+            gs.error('CREDENTIALS NOT FOUND for ' + username);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -122,135 +96,15 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        gs.info('USER FOUND:' + username);
-        const userId = user.getUniqueValue();
-        gs.info('USER ID: ' + userId);
+        const storedEncodedPassword = creds.getValue('password') || '';
+        gs.info('STORED ENCODED: [' + storedEncodedPassword.substring(0, 20) + '...]');
         
-        // Try to retrieve password from multiple locations
-        // Method 1: Try custom field x_2009786_vaccinat_pwd
-        let storedPassword = '';
-        let storageLocation = 'UNKNOWN';
-        let isBase64 = false;
+        // Direct comparison of Base64 values
+        const passwordMatches = (encodedReceivedPassword === storedEncodedPassword);
+        gs.info('PASSWORD MATCH: ' + passwordMatches);
         
-        try {
-            const customFieldValue = user.getValue('x_2009786_vaccinat_pwd') || '';
-            if (customFieldValue && customFieldValue.length > 0) {
-                // Try to decode as Base64
-                try {
-                    storedPassword = decodeBase64(customFieldValue);
-                    isBase64 = true;
-                    storageLocation = 'CUSTOM_FIELD(Base64)';
-                    gs.info('FOUND PASSWORD IN CUSTOM FIELD (Base64): length=' + storedPassword.length);
-                } catch (e) {
-                    // If not Base64, use as-is
-                    storedPassword = customFieldValue;
-                    storageLocation = 'CUSTOM_FIELD(Plain)';
-                    gs.info('FOUND PASSWORD IN CUSTOM FIELD (Plain): length=' + storedPassword.length);
-                }
-            }
-        } catch (e) {
-            gs.info('Custom field access error: ' + e.message);
-        }
-        
-        // Method 2: Try notes field
-        if (!storedPassword || storedPassword.length === 0) {
-            const notesValue = user.getValue('notes') || '';
-            gs.info('NOTES FIELD: [' + notesValue.substring(0, 30) + '...] (len=' + notesValue.length + ')');
-            if (notesValue && notesValue.length > 0) {
-                // Try to decode as Base64
-                try {
-                    storedPassword = decodeBase64(notesValue);
-                    isBase64 = true;
-                    storageLocation = 'NOTES_FIELD(Base64)';
-                    gs.info('USING PASSWORD FROM NOTES (Base64): length=' + storedPassword.length);
-                } catch (e) {
-                    // If not Base64, use as-is
-                    storedPassword = notesValue;
-                    storageLocation = 'NOTES_FIELD(Plain)';
-                    gs.info('USING PASSWORD FROM NOTES (Plain): length=' + storedPassword.length);
-                }
-            }
-        }
-        
-        // Method 3: Try description field (backup format)
-        if (!storedPassword || storedPassword.length === 0) {
-            const description = user.getValue('description') || '';
-            gs.info('DESCRIPTION FIELD: [' + description.substring(0, 30) + '...] (len=' + description.length + ')');
-            
-            // Try new backup format: PWD:base64password|ROLE:role
-            if (description && description.indexOf('PWD:') === 0) {
-                try {
-                    const parts = description.split('|');
-                    if (parts[0].indexOf('PWD:') === 0) {
-                        const encodedPwd = parts[0].substring(4); // Extract after "PWD:"
-                        try {
-                            storedPassword = decodeBase64(encodedPwd);
-                            isBase64 = true;
-                            storageLocation = 'DESCRIPTION_BACKUP(Base64)';
-                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP (Base64): length=' + storedPassword.length);
-                        } catch (e) {
-                            // If not Base64, use as-is
-                            storedPassword = encodedPwd;
-                            storageLocation = 'DESCRIPTION_BACKUP(Plain)';
-                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP (Plain): length=' + storedPassword.length);
-                        }
-                    }
-                } catch (e) {
-                    gs.info('Description backup parse error: ' + e.message);
-                }
-            }
-            
-            // Try old JSON format: {"creds":{"u":"username","p":"password"},"role":"citizen"}
-            if (!storedPassword || storedPassword.length === 0) {
-                try {
-                    if (description && description.indexOf('{') === 0) {
-                        const credsObj = JSON.parse(description);
-                        storedPassword = credsObj.creds.p || '';
-                        if (storedPassword && storedPassword.length > 0) {
-                            storageLocation = 'DESCRIPTION_JSON';
-                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION JSON: length=' + storedPassword.length);
-                        }
-                    }
-                } catch (e) {
-                    gs.info('Description JSON parse error: ' + e.message);
-                }
-            }
-        }
-        
-        gs.info('PASSWORD STORED IN: ' + storageLocation);
-        gs.info('VERIFICATION:');
-        gs.info('  RECEIVED: [' + password + '] (len=' + password.length + ')');
-        gs.info('  STORED:   [' + storedPassword + '] (len=' + storedPassword.length + ')');
-        gs.info('  BYTES MATCH: ' + (password === storedPassword));
-        
-        if (!storedPassword || storedPassword.length === 0) {
-            gs.error('NO PASSWORD FOUND IN ANY STORAGE LOCATION');
-            
-            // Get diagnostic info about what we found
-            const notes = user.getValue('notes') || '';
-            const description = user.getValue('description') || '';
-            let customField = '';
-            try {
-                customField = user.getValue('x_2009786_vaccinat_pwd') || '';
-            } catch (e) {}
-            
-            response.setStatus(401);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Invalid credentials',
-                diagnostic: {
-                    userFound: true,
-                    notesLength: notes.length,
-                    customFieldLength: customField.length,
-                    descriptionLength: description.length,
-                    descriptionStart: description.substring(0, 50)
-                }
-            }));
-            return;
-        }
-        
-        if (password !== storedPassword) {
-            gs.error('PASSWORD MISMATCH - authentication failed');
+        if (!passwordMatches) {
+            gs.error('PASSWORD MISMATCH');
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -259,144 +113,79 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        gs.info('LOGIN: ✓ Password verified for ' + username);
+        // Get user info
+        const userId = creds.getValue('sys_user_id');
+        const user = new GlideRecord('sys_user');
+        user.get(userId);
         
-        // Check if user is locked
-        if (user.getValue('locked_out') == 'true') {
-            gs.info('LOGIN: User locked: ' + username);
+        if (!user.isValid()) {
+            gs.error('USER NOT FOUND: ' + userId);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Account is locked'
+                error: 'Invalid credentials'
             }));
             return;
         }
         
-        // Build response
-        const userInfo = {
-            sys_id: user.getUniqueValue(),
-            user_name: user.getValue('user_name'),
-            first_name: user.getValue('first_name') || '',
-            last_name: user.getValue('last_name') || '',
-            email: user.getValue('email') || '',
-            description: user.getValue('description') || '',
-            roles: getRoles(user.getUniqueValue())
-        };
+        gs.info('✓ LOGIN SUCCESS for ' + username);
         
-        gs.info('LOGIN: Success for ' + username);
+        // Get role from description or default to citizen
+        const description = user.getValue('description') || '';
+        let role = 'citizen';
+        if (description && description.indexOf('ROLE:') === 0) {
+            role = description.substring(5).trim();
+        }
         
         response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
-            user: userInfo
+            user: {
+                sys_id: user.getUniqueValue(),
+                username: user.getValue('user_name'),
+                email: user.getValue('email'),
+                first_name: user.getValue('first_name'),
+                last_name: user.getValue('last_name'),
+                roles: [role]
+            }
         }));
         
-    } catch (error) {
-        gs.error('LOGIN ERROR: ' + error.message);
+        gs.info('===== LOGIN END =====\n');
+        
+    } catch (e) {
+        gs.error('LOGIN EXCEPTION: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
-            error: 'Server error: ' + error.message
+            error: e.message
         }));
     }
 }
 
-function getRoles(userId) {
-    const roles = [];
-    try {
-        // Get user to check description field for role
-        const userGr = new GlideRecord('sys_user');
-        userGr.get(userId);
-        const description = userGr.getValue('description') || '';
-        
-        // Try new backup format: PWD:password|ROLE:role
-        if (description && description.indexOf('PWD:') === 0) {
-            try {
-                const parts = description.split('|');
-                if (parts.length > 1 && parts[1].indexOf('ROLE:') === 0) {
-                    const role = parts[1].substring(5); // Extract after "ROLE:"
-                    if (role) {
-                        roles.push(role);
-                        gs.info('getRoles: Found role from backup format - ' + role);
-                    }
-                }
-            } catch (e) {
-                gs.info('getRoles: Backup format error - ' + e.message);
-            }
-        }
-        
-        // Try old JSON format
-        if (roles.length === 0 && description.indexOf('{') === 0) {
-            try {
-                const credObj = JSON.parse(description);
-                if (credObj.role) {
-                    roles.push(credObj.role);
-                    gs.info('getRoles: Found role from JSON format - ' + credObj.role);
-                }
-            } catch (e) {
-                gs.info('getRoles: JSON format error - ' + e.message);
-            }
-        }
-        
-        // If no role found yet, default to citizen
-        if (roles.length === 0) {
-            roles.push('citizen');
-            gs.info('getRoles: Defaulting to citizen');
-        }
-        
-        // Also check sys_user_has_role table for standard roles
-        const userRoles = new GlideRecord('sys_user_has_role');
-        userRoles.addQuery('user', userId);
-        userRoles.query();
-        
-        while (userRoles.next()) {
-            const roleGr = new GlideRecord('sys_user_role');
-            if (roleGr.get(userRoles.getValue('role'))) {
-                roles.push(roleGr.getValue('name'));
-            }
-        }
-    } catch (e) {
-        gs.error('AUTH API: Role fetch error: ' + e.message);
-    }
-    return roles;
-}
-
 /**
- * Register a new user
- * @param {Object} request - REST API request
- * @param {Object} response - REST API response
+ * REGISTER - Create user AND store credentials in separate table
  */
 export function registerUser(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('===== REGISTER START =====');
+        gs.info('===== REGISTER START (v2) =====');
         
-        if (request.method === 'OPTIONS') {
-            response.setStatus(200);
-            response.getStreamWriter().writeString('{"status":"ok"}');
-            return;
-        }
+        const data = parseRequestBody(request);
         
-        let data = parseRequestBody(request);
-        
-        // Validate required fields
         if (!data || !data.username || !data.password || !data.email || !data.firstName || !data.lastName) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Required fields: username, password, email, firstName, lastName'
+                error: 'Missing required fields'
             }));
             return;
         }
         
         const role = data.role || 'citizen';
-        
         gs.info('USERNAME: [' + data.username + ']');
-        gs.info('PASSWORD: [' + data.password + '] (len=' + data.password.length + ')');
+        gs.info('PASSWORD: [' + data.password.substring(0, 10) + '...]');
         gs.info('EMAIL: [' + data.email + ']');
         gs.info('ROLE: [' + role + ']');
         
@@ -414,21 +203,7 @@ export function registerUser(request, response) {
             return;
         }
         
-        // Check if email already exists
-        const existingEmail = new GlideRecord('sys_user');
-        existingEmail.addQuery('email', data.email);
-        existingEmail.query();
-        
-        if (existingEmail.next()) {
-            response.setStatus(409);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Email already registered'
-            }));
-            return;
-        }
-        
-        // Create new user
+        // Create sys_user
         const newUser = new GlideRecord('sys_user');
         newUser.initialize();
         newUser.setValue('user_name', data.username);
@@ -436,41 +211,13 @@ export function registerUser(request, response) {
         newUser.setValue('first_name', data.firstName);
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
-        
-        // IMPORTANT: Store password ONLY in notes field (most reliable)
-        // Use Base64 encoding to ensure reliable storage
-        const encodedPassword = encodeBase64(data.password);
-        newUser.setValue('notes', encodedPassword);
-        gs.info('PASSWORD STORED IN NOTES (Base64): length=' + encodedPassword.length);
-        
-        // Verify it was set BEFORE insert
-        const testNotesValue = newUser.getValue('notes') || '';
-        gs.info('PRE-INSERT CHECK - notes field has: [' + testNotesValue.substring(0, 30) + '...] (len=' + testNotesValue.length + ')');
-        
-        // Also try custom field (with fallback handling)
-        try {
-            newUser.setValue('x_2009786_vaccinat_pwd', encodedPassword);
-            gs.info('PASSWORD ALSO STORED IN CUSTOM FIELD (Base64)');
-            const testCustomValue = newUser.getValue('x_2009786_vaccinat_pwd') || '';
-            gs.info('PRE-INSERT CHECK - custom field has: [' + testCustomValue.substring(0, 30) + '...] (len=' + testCustomValue.length + ')');
-        } catch (e) {
-            gs.info('Custom field not available: ' + e.message);
-        }
-        
-        // BACKUP: Also store in description for absolute certainty
-        // Format: PWD:base64password|ROLE:role
-        const descriptionBackup = 'PWD:' + encodedPassword + '|ROLE:' + role;
-        newUser.setValue('description', descriptionBackup);
-        gs.info('PASSWORD ALSO STORED IN DESCRIPTION (Base64)');
-        const testDescValue = newUser.getValue('description') || '';
-        gs.info('PRE-INSERT CHECK - description field has: [' + testDescValue.substring(0, 30) + '...] (len=' + testDescValue.length + ')');
-        
-        gs.info('USER DATA READY - INSERTING...');
+        newUser.setValue('description', 'ROLE:' + role);
         
         const userId = newUser.insert();
+        gs.info('USER CREATED: ID=' + userId);
         
         if (!userId) {
-            gs.error('INSERT FAILED');
+            gs.error('USER INSERT FAILED');
             response.setStatus(500);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -479,309 +226,212 @@ export function registerUser(request, response) {
             return;
         }
         
-        gs.info('USER CREATED: ID=' + userId);
+        // Encode password
+        const encodedPassword = encodeBase64(data.password);
+        gs.info('PASSWORD ENCODED: length=' + encodedPassword.length);
         
-        // VERIFY the user was created and password was saved
-        const verifyUser = new GlideRecord('sys_user');
-        verifyUser.get(userId);
+        // Store credentials in SEPARATE table
+        const credRecord = new GlideRecord('x_2009786_vaccinat_credentials');
+        credRecord.initialize();
+        credRecord.setValue('username', data.username);
+        credRecord.setValue('password', encodedPassword);
+        credRecord.setValue('sys_user_id', userId);
         
-        const verifyNotes = verifyUser.getValue('notes') || '';
-        let verifyCustom = '';
-        try {
-            verifyCustom = verifyUser.getValue('x_2009786_vaccinat_pwd') || '';
-        } catch (e) {
-            // Custom field might not exist
-        }
-        const verifyDescription = verifyUser.getValue('description') || '';
+        const credId = credRecord.insert();
+        gs.info('CREDENTIALS STORED: ID=' + credId);
         
-        gs.info('VERIFICATION:');
-        gs.info('  NOTES field: [' + verifyNotes.substring(0, 30) + '...] (len=' + verifyNotes.length + ')');
-        gs.info('  CUSTOM field: [' + verifyCustom.substring(0, 30) + '...] (len=' + verifyCustom.length + ')');
-        gs.info('  DESCRIPTION field: [' + verifyDescription.substring(0, 30) + '...] (len=' + verifyDescription.length + ')');
-        
-        // Check if password was stored
-        let passwordVerified = false;
-        
-        // Check notes field (Base64 encoded)
-        if (verifyNotes === encodedPassword) {
-            gs.info('✓✓✓ PASSWORD VERIFIED IN NOTES FIELD (Base64) ✓✓✓');
-            passwordVerified = true;
-        }
-        // Check custom field (Base64 encoded)
-        else if (verifyCustom === encodedPassword) {
-            gs.info('✓✓✓ PASSWORD VERIFIED IN CUSTOM FIELD (Base64) ✓✓✓');
-            passwordVerified = true;
-        }
-        // Check backup format in description
-        else {
-            const descriptionBackup = 'PWD:' + encodedPassword + '|ROLE:' + role;
-            if (verifyDescription === descriptionBackup) {
-                gs.info('✓✓✓ PASSWORD VERIFIED IN DESCRIPTION (BACKUP, Base64) ✓✓✓');
-                passwordVerified = true;
-            }
+        if (!credId) {
+            gs.error('CREDENTIALS INSERT FAILED');
+            response.setStatus(500);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Failed to store credentials'
+            }));
+            return;
         }
         
-        if (!passwordVerified) {
-            gs.error('❌ PASSWORD NOT VERIFIED - Storage may have failed!');
-            gs.error('  Expected (encoded): [' + encodedPassword + ']');
-            gs.error('  Expected in DESC: [' + ('PWD:' + encodedPassword + '|ROLE:' + role) + ']');
-            gs.error('  Notes has: [' + verifyNotes.substring(0, 50) + '...]');
-            gs.error('  Custom has: [' + verifyCustom.substring(0, 50) + '...]');
-            gs.error('  Description has: [' + verifyDescription.substring(0, 50) + '...]');
+        // Verify
+        const verify = new GlideRecord('x_2009786_vaccinat_credentials');
+        verify.get(credId);
+        const storedPwd = verify.getValue('password') || '';
+        gs.info('VERIFICATION: Stored password length=' + storedPwd.length);
+        
+        if (storedPwd === encodedPassword) {
+            gs.info('✓ CREDENTIALS VERIFIED');
+        } else {
+            gs.error('❌ CREDENTIALS NOT VERIFIED');
         }
         
-        // Fetch the new user to return complete info
-        const user = new GlideRecord('sys_user');
-        user.get(userId);
-        
-        const userInfo = {
-            sys_id: user.getUniqueValue(),
-            user_name: user.getValue('user_name'),
-            first_name: user.getValue('first_name'),
-            last_name: user.getValue('last_name'),
-            email: user.getValue('email'),
-            roles: getRoles(userId)
-        };
-        
-        gs.info('===== REGISTER SUCCESS =====\n');
+        gs.info('✓ REGISTER SUCCESS for ' + data.username);
         
         response.setStatus(201);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
             message: 'User registered successfully',
-            user: userInfo
+            userId: userId
         }));
         
-    } catch (error) {
-        gs.error('REGISTER API: Error - ' + error.message);
+        gs.info('===== REGISTER END =====\n');
+        
+    } catch (e) {
+        gs.error('REGISTER EXCEPTION: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
-            error: 'Server error: ' + error.message
+            error: e.message
         }));
     }
 }
 
 /**
- * Create a new booking request
- * @param {Object} request - REST API request
- * @param {Object} response - REST API response
+ * CREATE BOOKING
  */
 export function createBooking(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('📅 CREATE BOOKING - ' + new Date().toISOString());
+        const data = parseRequestBody(request);
         
-        if (request.method === 'OPTIONS') {
-            response.setStatus(200);
-            response.getStreamWriter().writeString('{"status":"ok"}');
-            return;
-        }
-        
-        let data = parseRequestBody(request);
-        
-        // Validate required fields (referenceNumber is optional - backend generates it)
-        if (!data || !data.fullName || !data.vaccineType || !data.preferredDate) {
+        if (!data || !data.userId || !data.vaccine || !data.date) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Missing required booking fields: fullName, vaccineType, preferredDate'
+                error: 'Missing required booking fields'
             }));
             return;
         }
         
-        // Generate unique reference number if not provided
-        let refNum = data.referenceNumber;
-        if (!refNum) {
-            refNum = 'EBK-' + Math.floor(100000 + Math.random() * 900000);
-        }
+        const refNumber = 'EBK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
         
-        // Create booking record in custom table
-        // Note: This assumes x_2009786_vaccinat_citizen_booking table exists
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
         booking.initialize();
-        booking.setValue('full_name', data.fullName);
-        booking.setValue('contact_no', data.contactNo || '');
-        booking.setValue('date_of_birth', data.dateOfBirth || '');
-        booking.setValue('barangay', data.barangay || '');
-        booking.setValue('vaccine_type', data.vaccineType);
-        booking.setValue('preferred_date', data.preferredDate);
-        booking.setValue('dose_number', data.doseNumber || '1');
-        booking.setValue('health_unit', data.healthUnit || '');
-        booking.setValue('reference_number', refNum);
-        booking.setValue('status', 'pending'); // pending, approved, rejected
-        booking.setValue('created_date', new Date().toISOString());
-        booking.setValue('user_id', data.user_id || '');
+        booking.setValue('reference_number', refNumber);
+        booking.setValue('sys_user_id', data.userId);
+        booking.setValue('vaccine_type', data.vaccine);
+        booking.setValue('booking_date', data.date);
+        booking.setValue('clinic_id', data.clinicId || '');
+        booking.setValue('status', 'confirmed');
         
         const bookingId = booking.insert();
         
-        if (!bookingId) {
-            gs.error('Failed to create booking');
-            response.setStatus(500);
-            response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Failed to create booking'
-            }));
-            return;
-        }
-        
-        gs.info('✓ Booking created: ' + refNum + ' with ID: ' + bookingId);
-        
-        response.setStatus(201);
+        response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
-            message: 'Booking created successfully',
-            referenceNumber: refNum,
-            bookingId: bookingId
+            booking: {
+                reference_number: refNumber,
+                booking_id: bookingId
+            }
         }));
         
-    } catch (error) {
-        gs.error('CREATE BOOKING ERROR: ' + error.message);
+    } catch (e) {
+        gs.error('CREATE BOOKING ERROR: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
-            error: 'Server error: ' + error.message
+            error: e.message
         }));
     }
 }
 
 /**
- * Track booking status by reference number
- * @param {Object} request - REST API request
- * @param {Object} response - REST API response
+ * TRACK BOOKING
  */
 export function trackBooking(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('🔍 TRACK BOOKING - ' + new Date().toISOString());
+        const data = parseRequestBody(request);
         
-        if (request.method === 'OPTIONS') {
-            response.setStatus(200);
-            response.getStreamWriter().writeString('{"status":"ok"}');
-            return;
-        }
-        
-        const referenceNumber = request.queryParams?.referenceNumber || request.queryParams?.ref;
-        
-        if (!referenceNumber) {
+        if (!data || !data.referenceNumber) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Reference number is required'
+                error: 'Missing reference number'
             }));
             return;
         }
         
-        // Look up booking by reference number - try exact match first
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        booking.addQuery('reference_number', 'CONTAINS', referenceNumber);
-        booking.orderByDesc('created_date');
+        booking.addQuery('reference_number', data.referenceNumber);
         booking.query();
         
         if (!booking.next()) {
-            gs.info('Booking not found: ' + referenceNumber);
             response.setStatus(404);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Booking not found. Reference: ' + referenceNumber,
-                referenceNumber: referenceNumber
+                error: 'Booking not found'
             }));
             return;
         }
-        
-        gs.info('✓ Booking found: ' + referenceNumber);
-        
-        const bookingInfo = {
-            referenceNumber: booking.getValue('reference_number'),
-            fullName: booking.getValue('full_name'),
-            status: booking.getValue('status'),
-            vaccineType: booking.getValue('vaccine_type'),
-            preferredDate: booking.getValue('preferred_date'),
-            createdDate: booking.getValue('created_date'),
-            decisionNotes: booking.getValue('decision_notes') || ''
-        };
         
         response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
-            booking: bookingInfo
+            booking: {
+                reference_number: booking.getValue('reference_number'),
+                vaccine_type: booking.getValue('vaccine_type'),
+                booking_date: booking.getValue('booking_date'),
+                status: booking.getValue('status'),
+                clinic_id: booking.getValue('clinic_id')
+            }
         }));
         
-    } catch (error) {
-        gs.error('TRACK BOOKING ERROR: ' + error.message);
+    } catch (e) {
+        gs.error('TRACK BOOKING ERROR: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
-            error: 'Server error: ' + error.message
+            error: e.message
         }));
     }
 }
 
 /**
- * Get dashboard statistics
- * @param {Object} request - REST API request
- * @param {Object} response - REST API response
+ * GET DASHBOARD STATS
  */
 export function getDashboardStats(request, response) {
     response.setContentType('application/json');
     response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('📊 DASHBOARD STATS - ' + new Date().toISOString());
+        const data = parseRequestBody(request);
+        const userId = data && data.userId ? data.userId : '';
         
-        if (request.method === 'OPTIONS') {
-            response.setStatus(200);
-            response.getStreamWriter().writeString('{"status":"ok"}');
-            return;
-        }
-        
-        // Get total bookings
-        const totalBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        totalBookings.query();
-        const totalBookingsCount = totalBookings.getRowCount();
-        
-        // Get completed bookings
-        const completedBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        completedBookings.addQuery('status', 'completed');
-        completedBookings.query();
-        const completedCount = completedBookings.getRowCount();
-        
-        // Get pending bookings
-        const pendingBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        pendingBookings.addQuery('status', 'pending');
-        pendingBookings.query();
-        const pendingCount = pendingBookings.getRowCount();
-        
-        const stats = {
-            totalBookings: totalBookingsCount,
-            completedBookings: completedCount,
-            pendingBookings: pendingCount
+        let stats = {
+            total_bookings: 0,
+            confirmed: 0,
+            completed: 0,
+            pending: 0
         };
         
-        gs.info('✓ Dashboard stats retrieved');
+        const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        if (userId) {
+            booking.addQuery('sys_user_id', userId);
+        }
+        booking.query();
+        
+        while (booking.next()) {
+            stats.total_bookings++;
+            const status = booking.getValue('status');
+            if (status === 'confirmed') stats.confirmed++;
+            else if (status === 'completed') stats.completed++;
+            else if (status === 'pending') stats.pending++;
+        }
         
         response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
-            data: stats
+            stats: stats
         }));
         
-    } catch (error) {
-        gs.error('DASHBOARD STATS ERROR: ' + error.message);
+    } catch (e) {
+        gs.error('STATS ERROR: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
-            error: 'Server error: ' + error.message
+            error: e.message
         }));
     }
 }
