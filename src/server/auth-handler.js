@@ -238,11 +238,22 @@ export function registerUser(request, response) {
         
         gs.info('✓ REGISTER SUCCESS for ' + data.username);
         
+        // Get user to return in response
+        const user = new GlideRecord('sys_user');
+        user.get(userId);
+        
         response.setStatus(201);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
             message: 'User registered successfully',
-            userId: userId
+            user: {
+                sys_id: user.getUniqueValue(),
+                username: user.getValue('user_name'),
+                email: user.getValue('email'),
+                first_name: user.getValue('first_name'),
+                last_name: user.getValue('last_name'),
+                roles: [role]
+            }
         }));
         
         gs.info('===== REGISTER END =====\n');
