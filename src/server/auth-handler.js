@@ -126,22 +126,41 @@ export function authenticateUser(request, response) {
             }
         }
         
-        // Method 3: Try description field (old format - JSON)
+        // Method 3: Try description field (backup format)
         if (!storedPassword || storedPassword.length === 0) {
             const description = user.getValue('description') || '';
             gs.info('DESCRIPTION FIELD: [' + description + '] (len=' + description.length + ')');
             
-            try {
-                if (description && description.indexOf('{') === 0) {
-                    const credsObj = JSON.parse(description);
-                    storedPassword = credsObj.creds.p || '';
-                    if (storedPassword && storedPassword.length > 0) {
-                        storageLocation = 'DESCRIPTION_JSON';
-                        gs.info('EXTRACTED PASSWORD FROM DESCRIPTION JSON: length=' + storedPassword.length);
+            // Try new backup format: PWD:password|ROLE:role
+            if (description && description.indexOf('PWD:') === 0) {
+                try {
+                    const parts = description.split('|');
+                    if (parts[0].indexOf('PWD:') === 0) {
+                        storedPassword = parts[0].substring(4); // Extract after "PWD:"
+                        if (storedPassword && storedPassword.length > 0) {
+                            storageLocation = 'DESCRIPTION_BACKUP';
+                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION BACKUP: length=' + storedPassword.length);
+                        }
                     }
+                } catch (e) {
+                    gs.info('Description backup parse error: ' + e.message);
                 }
-            } catch (e) {
-                gs.info('Description JSON parse error: ' + e.message);
+            }
+            
+            // Try old JSON format: {"creds":{"u":"username","p":"password"},"role":"citizen"}
+            if (!storedPassword || storedPassword.length === 0) {
+                try {
+                    if (description && description.indexOf('{') === 0) {
+                        const credsObj = JSON.parse(description);
+                        storedPassword = credsObj.creds.p || '';
+                        if (storedPassword && storedPassword.length > 0) {
+                            storageLocation = 'DESCRIPTION_JSON';
+                            gs.info('EXTRACTED PASSWORD FROM DESCRIPTION JSON: length=' + storedPassword.length);
+                        }
+                    }
+                } catch (e) {
+                    gs.info('Description JSON parse error: ' + e.message);
+                }
             }
         }
         
@@ -221,13 +240,39 @@ function getRoles(userId) {
         userGr.get(userId);
         const description = userGr.getValue('description') || '';
         
-        // Extract role from JSON description
-        if (description.startsWith('{')) {
-            const credObj = JSON.parse(description);
-            if (credObj.role) {
-                roles.push(credObj.role);
-                gs.info('getRoles: Found role - ' + credObj.role);
+        // Try new backup format: PWD:password|ROLE:role
+        if (description && description.indexOf('PWD:') === 0) {
+            try {
+                const parts = description.split('|');
+                if (parts.length > 1 && parts[1].indexOf('ROLE:') === 0) {
+                    const role = parts[1].substring(5); // Extract after "ROLE:"
+                    if (role) {
+                        roles.push(role);
+                        gs.info('getRoles: Found role from backup format - ' + role);
+                    }
+                }
+            } catch (e) {
+                gs.info('getRoles: Backup format error - ' + e.message);
             }
+        }
+        
+        // Try old JSON format
+        if (roles.length === 0 && description.indexOf('{') === 0) {
+            try {
+                const credObj = JSON.parse(description);
+                if (credObj.role) {
+                    roles.push(credObj.role);
+                    gs.info('getRoles: Found role from JSON format - ' + credObj.role);
+                }
+            } catch (e) {
+                gs.info('getRoles: JSON format error - ' + e.message);
+            }
+        }
+        
+        // If no role found yet, default to citizen
+        if (roles.length === 0) {
+            roles.push('citizen');
+            gs.info('getRoles: Defaulting to citizen');
         }
         
         // Also check sys_user_has_role table for standard roles
@@ -335,8 +380,11 @@ export function registerUser(request, response) {
             gs.info('Custom field not available: ' + e.message);
         }
         
-        // Store role separately in description
-        newUser.setValue('description', 'ROLE:' + role);
+        // BACKUP: Also store in description for absolute certainty
+        // Format: PWD:password|ROLE:role
+        const descriptionBackup = 'PWD:' + data.password + '|ROLE:' + role;
+        newUser.setValue('description', descriptionBackup);
+        gs.info('PASSWORD ALSO STORED IN DESCRIPTION FIELD (BACKUP)');
         
         gs.info('USER DATA READY - INSERTING...');
         
@@ -365,21 +413,38 @@ export function registerUser(request, response) {
         } catch (e) {
             // Custom field might not exist
         }
+        const verifyDescription = verifyUser.getValue('description') || '';
         
         gs.info('VERIFICATION:');
         gs.info('  NOTES field: [' + verifyNotes + '] (len=' + verifyNotes.length + ')');
         gs.info('  CUSTOM field: [' + verifyCustom + '] (len=' + verifyCustom.length + ')');
+        gs.info('  DESCRIPTION field: [' + verifyDescription + '] (len=' + verifyDescription.length + ')');
         
         // Check if password was stored
+        let passwordVerified = false;
+        
         if (verifyNotes === data.password) {
             gs.info('✓✓✓ PASSWORD VERIFIED IN NOTES FIELD ✓✓✓');
+            passwordVerified = true;
         } else if (verifyCustom === data.password) {
             gs.info('✓✓✓ PASSWORD VERIFIED IN CUSTOM FIELD ✓✓✓');
+            passwordVerified = true;
         } else {
+            // Check backup format in description
+            const descriptionBackup = 'PWD:' + data.password + '|ROLE:' + role;
+            if (verifyDescription === descriptionBackup) {
+                gs.info('✓✓✓ PASSWORD VERIFIED IN DESCRIPTION (BACKUP) ✓✓✓');
+                passwordVerified = true;
+            }
+        }
+        
+        if (!passwordVerified) {
             gs.error('❌ PASSWORD NOT VERIFIED - Storage failed!');
             gs.error('  Expected: [' + data.password + ']');
+            gs.error('  Expected in DESC: [' + descriptionBackup + ']');
             gs.error('  Notes has: [' + verifyNotes + ']');
             gs.error('  Custom has: [' + verifyCustom + ']');
+            gs.error('  Description has: [' + verifyDescription + ']');
         }
         
         // Fetch the new user to return complete info
