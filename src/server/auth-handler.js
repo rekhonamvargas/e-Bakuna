@@ -310,10 +310,74 @@ export function registerUser(request, response) {
         existing.query();
         
         if (existing.next()) {
-            response.setStatus(409);
+            // Password reset path (keep simple, prevent account takeover)
+            const existingEmail = (existing.getValue('email') || '').toString().trim();
+            const providedEmail = (data.email || '').toString().trim();
+
+            if (existingEmail && providedEmail && existingEmail.toLowerCase() !== providedEmail.toLowerCase()) {
+                response.setStatus(409);
+                response.getStreamWriter().writeString(JSON.stringify({
+                    status: 'error',
+                    error: 'Username already exists with a different email'
+                }));
+                return;
+            }
+
+            gs.info('USER EXISTS - resetting credentials for: ' + data.username);
+
+            // Update profile fields (best-effort)
+            existing.setValue('first_name', data.firstName);
+            existing.setValue('last_name', data.lastName);
+            existing.setValue('email', data.email);
+            existing.setValue('active', true);
+            existing.setValue('description', 'ROLE:' + role);
+            existing.update();
+
+            // Deactivate any existing credential records
+            const oldCreds = new GlideRecord('x_2009786_vaccinat_user_credential');
+            oldCreds.addQuery('user', existing.getUniqueValue());
+            oldCreds.addQuery('active', true);
+            oldCreds.query();
+            while (oldCreds.next()) {
+                oldCreds.setValue('active', false);
+                oldCreds.update();
+            }
+
+            // Create new credential record
+            const salt = generateSalt();
+            const hash = computePasswordHash(data.password, salt);
+            const cred = new GlideRecord('x_2009786_vaccinat_user_credential');
+            cred.initialize();
+            cred.setValue('username', data.username);
+            cred.setValue('user', existing.getUniqueValue());
+            cred.setValue('password_salt', salt);
+            cred.setValue('password_hash', hash);
+            cred.setValue('algorithm', 'SHA256_BASE64_SALT_PREFIX_V1');
+            cred.setValue('active', true);
+
+            const credId = cred.insert();
+            if (!credId) {
+                gs.error('CREDENTIAL RESET FAILED');
+                response.setStatus(500);
+                response.getStreamWriter().writeString(JSON.stringify({
+                    status: 'error',
+                    error: 'Failed to reset user credentials'
+                }));
+                return;
+            }
+
+            response.setStatus(200);
             response.getStreamWriter().writeString(JSON.stringify({
-                status: 'error',
-                error: 'Username already exists'
+                status: 'success',
+                message: 'User already exists; password updated',
+                user: {
+                    sys_id: existing.getUniqueValue(),
+                    username: existing.getValue('user_name'),
+                    email: existing.getValue('email'),
+                    first_name: existing.getValue('first_name'),
+                    last_name: existing.getValue('last_name'),
+                    roles: [role]
+                }
             }));
             return;
         }

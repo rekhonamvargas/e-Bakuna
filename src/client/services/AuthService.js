@@ -4,6 +4,33 @@ export class AuthService {
     this.authApiUrl = '/api/x_2009786_vaccinat/v1/ebakuna_auth';
   }
 
+  async readResponsePayload(response) {
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { error: text };
+    }
+  }
+
+  getErrorMessage(payload, fallbackMessage) {
+    if (!payload) return fallbackMessage;
+    const err = payload.error;
+    if (!err) return fallbackMessage;
+    if (typeof err === 'string') return err;
+    if (typeof err === 'object') {
+      if (typeof err.message === 'string') return err.message;
+      if (typeof err.detail === 'string') return err.detail;
+      try {
+        return JSON.stringify(err);
+      } catch {
+        return fallbackMessage;
+      }
+    }
+    return String(err);
+  }
+
   async login(username, password) {
     console.log('🔐 Logging in:', username);
     
@@ -20,20 +47,20 @@ export class AuthService {
         body: params.toString()
       });
 
+      const payload = await this.readResponsePayload(response);
+
       if (response.ok) {
-        const responseData = await response.json();
-        if (responseData.status === 'success' && responseData.user) {
-          localStorage.setItem('ebakuna_user', JSON.stringify(responseData.user));
-          return responseData.user;
+        if (payload && payload.status === 'success' && payload.user) {
+          localStorage.setItem('ebakuna_user', JSON.stringify(payload.user));
+          return payload.user;
         } else {
-          const err = new Error(responseData.error || 'Invalid login response');
-          err.debug = responseData.debug;
+          const err = new Error(this.getErrorMessage(payload, 'Invalid login response'));
+          err.debug = payload ? payload.debug : undefined;
           throw err;
         }
       } else {
-        const errorData = await response.json();
-        const err = new Error(errorData.error || 'Login failed');
-        err.debug = errorData.debug; // Attach debug info
+        const err = new Error(this.getErrorMessage(payload, 'Login failed'));
+        err.debug = payload ? payload.debug : undefined; // Attach debug info
         throw err;
       }
     } catch (error) {
