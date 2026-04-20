@@ -96,28 +96,25 @@ export function authenticateUser(request, response) {
         }
         
         // Retrieve stored credentials from description field
-        // Format: CREDS{username}:{password} ROLE:{role}
+        // Format (JSON): {"creds":{"u":"username","p":"password"},"role":"citizen"}
         const description = user.getValue('description') || '';
-        gs.info('LOGIN: Description field: ' + description);
+        gs.info('LOGIN: Description field present: ' + (description.length > 0));
         
         let storedPassword = '';
-        if (description.indexOf('CREDS{') === 0) {
-            const credsEnd = description.indexOf('}:');
-            if (credsEnd > 0) {
-                const storageUsername = description.substring(6, credsEnd);
-                const pwdStart = credsEnd + 2;
-                const roleStart = description.indexOf(' ROLE:');
-                const pwdEnd = roleStart > 0 ? roleStart : description.length;
-                storedPassword = description.substring(pwdStart, pwdEnd).trim();
-                gs.info('LOGIN: Extracted credentials - user: ' + storageUsername + ', pwd length: ' + storedPassword.length);
+        try {
+            if (description.startsWith('{')) {
+                const credsObj = JSON.parse(description);
+                storedPassword = credsObj.creds.p || '';
+                gs.info('LOGIN: Extracted password from JSON - length: ' + storedPassword.length);
             }
+        } catch (e) {
+            gs.warn('LOGIN: Failed to parse JSON credentials: ' + e.message);
         }
         
-        gs.info('LOGIN: Password check - received length: ' + password.length + ', stored length: ' + storedPassword.length);
-        gs.info('LOGIN: Password match: ' + (password === storedPassword));
+        gs.info('LOGIN: Password check - received: ' + password.length + ' chars, stored: ' + storedPassword.length + ' chars');
         
         if (!storedPassword || storedPassword !== password) {
-            gs.info('LOGIN: Authentication failed for ' + username);
+            gs.error('LOGIN: Password mismatch - received vs stored does not match');
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -176,13 +173,12 @@ function getRoles(userId) {
         userGr.get(userId);
         const description = userGr.getValue('description') || '';
         
-        // Extract role from description: CREDS{username}:password ROLE:{role}
-        if (description.indexOf('ROLE:') > 0) {
-            const roleStart = description.indexOf('ROLE:') + 5;
-            const role = description.substring(roleStart).trim();
-            if (role) {
-                roles.push(role);
-                gs.info('getRoles: Found role from description - ' + role);
+        // Extract role from JSON description
+        if (description.startsWith('{')) {
+            const credObj = JSON.parse(description);
+            if (credObj.role) {
+                roles.push(credObj.role);
+                gs.info('getRoles: Found role - ' + credObj.role);
             }
         }
         
@@ -274,11 +270,16 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
         
-        // Store credentials in description field: CREDS{username}:password ROLE:{role}
-        const credString = 'CREDS{' + data.username + '}:' + data.password + ' ROLE:' + role;
+        // Store credentials in description field as JSON
+        // Format: {"creds":{"u":"username","p":"password"},"role":"citizen"}
+        const credObj = {
+            creds: { u: data.username, p: data.password },
+            role: role
+        };
+        const credString = JSON.stringify(credObj);
         newUser.setValue('description', credString);
         
-        gs.info('REGISTER: Storing credentials - ' + credString);
+        gs.info('REGISTER: Storing credentials for ' + data.username);
         
         const userId = newUser.insert();
         
@@ -298,7 +299,7 @@ export function registerUser(request, response) {
         const verifyUser = new GlideRecord('sys_user');
         verifyUser.get(userId);
         const savedCreds = verifyUser.getValue('description') || '';
-        gs.info('REGISTER: Verification - ' + (savedCreds.indexOf('CREDS{') === 0 ? '✓ CREDENTIALS SAVED' : '✗ CREDENTIALS NOT SAVED'));
+        gs.info('REGISTER: Verification - credentials saved: ' + (savedCreds.length > 0));
         
         // Fetch the new user to return complete info
         const user = new GlideRecord('sys_user');
