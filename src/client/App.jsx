@@ -82,6 +82,10 @@ export default function App() {
   };
 
   const navigateTo = (page) => {
+    if (page === 'register') {
+      setCurrentPage('registration');
+      return;
+    }
     setCurrentPage(page);
   };
 
@@ -111,6 +115,7 @@ export default function App() {
   switch (currentPage) {
     case 'login':
       return <Login onLogin={handleLogin} onNavigate={navigateTo} />;
+    case 'register':
     case 'registration':
       return <Registration onNavigate={navigateTo} />;
     case 'booking-portal':
