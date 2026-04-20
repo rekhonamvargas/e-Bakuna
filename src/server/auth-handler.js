@@ -580,7 +580,7 @@ export function createBooking(request, response) {
     try {
         const data = parseRequestBody(request);
         
-        if (!data || !data.userId || !data.vaccine || !data.date) {
+        if (!data || !data.userId || !data.fullName || !data.contactNo || !data.dateOfBirth || !data.barangay || !data.vaccineType || !data.preferredDate) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -593,12 +593,22 @@ export function createBooking(request, response) {
         
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
         booking.initialize();
-        booking.setValue('reference_number', refNumber);
-        booking.setValue('sys_user_id', data.userId);
-        booking.setValue('vaccine_type', data.vaccine);
-        booking.setValue('booking_date', data.date);
-        booking.setValue('clinic_id', data.clinicId || '');
-        booking.setValue('status', 'confirmed');
+        booking.setValue('citizen_name', data.fullName);
+        booking.setValue('date_of_birth', data.dateOfBirth);
+        booking.setValue('contact_number', data.contactNo);
+        booking.setValue('barangay', data.barangay);
+        booking.setValue('dose_number', data.doseNumber || 'first');
+        booking.setValue('booking_reference', refNumber);
+        booking.setValue('booking_status', 'pending');
+        if (data.specialRequirements) {
+            booking.setValue('special_requirements', data.specialRequirements);
+        }
+        if (data.clinicSchedule) {
+            booking.setValue('clinic_schedule', data.clinicSchedule);
+        }
+        if (data.preferredDate) {
+            booking.setValue('first_dose_date', data.preferredDate);
+        }
         
         const bookingId = booking.insert();
         
@@ -606,6 +616,7 @@ export function createBooking(request, response) {
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
             booking: {
+                referenceNumber: refNumber,
                 reference_number: refNumber,
                 booking_id: bookingId
             }
@@ -631,7 +642,7 @@ export function trackBooking(request, response) {
     try {
         const data = parseRequestBody(request);
         
-        if (!data || !data.referenceNumber) {
+        if (!data || (!data.referenceNumber && !data.ref)) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -641,7 +652,7 @@ export function trackBooking(request, response) {
         }
         
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        booking.addQuery('reference_number', data.referenceNumber);
+        booking.addQuery('booking_reference', data.referenceNumber || data.ref);
         booking.query();
         
         if (!booking.next()) {
@@ -657,11 +668,15 @@ export function trackBooking(request, response) {
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
             booking: {
-                reference_number: booking.getValue('reference_number'),
-                vaccine_type: booking.getValue('vaccine_type'),
-                booking_date: booking.getValue('booking_date'),
-                status: booking.getValue('status'),
-                clinic_id: booking.getValue('clinic_id')
+                reference_number: booking.getValue('booking_reference'),
+                booking_reference: booking.getValue('booking_reference'),
+                citizen_name: booking.getValue('citizen_name'),
+                contact_number: booking.getValue('contact_number'),
+                barangay: booking.getValue('barangay'),
+                dose_number: booking.getValue('dose_number'),
+                booking_status: booking.getValue('booking_status'),
+                clinic_schedule: booking.getValue('clinic_schedule'),
+                first_dose_date: booking.getValue('first_dose_date')
             }
         }));
         
@@ -694,14 +709,11 @@ export function getDashboardStats(request, response) {
         };
         
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        if (userId) {
-            booking.addQuery('sys_user_id', userId);
-        }
         booking.query();
         
         while (booking.next()) {
             stats.total_bookings++;
-            const status = booking.getValue('status');
+            const status = booking.getValue('booking_status');
             if (status === 'confirmed') stats.confirmed++;
             else if (status === 'completed') stats.completed++;
             else if (status === 'pending') stats.pending++;

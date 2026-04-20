@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './BookingPortal.css';
 
-export default function BookingPortal({ user, onLogout }) {
+export default function BookingPortal({ user, onLogout, hideLogout = false }) {
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'track'
   const [stats, setStats] = useState({
     citizensBooked: 0,
@@ -85,31 +85,34 @@ export default function BookingPortal({ user, onLogout }) {
 
     setLoading(true);
     try {
-      // Don't generate ref on client - let backend do it
-      const params = new URLSearchParams();
-      params.append('user_id', user.sys_id);
-      params.append('fullName', formData.fullName);
-      params.append('contactNo', formData.contactNo);
-      params.append('dateOfBirth', formData.dateOfBirth);
-      params.append('barangay', formData.barangay);
-      params.append('vaccineType', formData.vaccineType);
-      params.append('preferredDate', formData.preferredDate);
-      params.append('doseNumber', formData.doseNumber);
-      params.append('healthUnit', formData.healthUnit);
-
-      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/booking?${params.toString()}`, {
+      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/booking`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.sys_id,
+          fullName: formData.fullName,
+          contactNo: formData.contactNo,
+          dateOfBirth: formData.dateOfBirth,
+          barangay: formData.barangay,
+          vaccineType: formData.vaccineType,
+          preferredDate: formData.preferredDate,
+          doseNumber: formData.doseNumber,
+          healthUnit: formData.healthUnit
+        })
       });
 
       const data = await response.json();
       console.log('📅 Booking response:', data);
       
-      if (data.status === 'success' && data.referenceNumber) {
+      const ref = data.referenceNumber || data.booking?.referenceNumber || data.booking?.reference_number;
+      if (data.status === 'success' && ref) {
         // Store booking reference in localStorage
         const savedRefs = JSON.parse(localStorage.getItem('ebakuna_bookings') || '[]');
         savedRefs.push({
-          referenceNumber: data.referenceNumber,
+          referenceNumber: ref,
           bookedDate: new Date().toISOString(),
           fullName: formData.fullName,
           vaccineType: formData.vaccineType,
@@ -118,7 +121,7 @@ export default function BookingPortal({ user, onLogout }) {
         localStorage.setItem('ebakuna_bookings', JSON.stringify(savedRefs));
         
         // Use returned reference number from backend
-        setReferenceNumber(data.referenceNumber);
+        setReferenceNumber(ref);
         setShowConfirmation(true);
         setFormData({
           fullName: user?.first_name + ' ' + user?.last_name || '',
@@ -130,7 +133,7 @@ export default function BookingPortal({ user, onLogout }) {
           doseNumber: '1st Dose',
           healthUnit: 'RHU'
         });
-        console.log('✓ Booking successful:', data.referenceNumber);
+        console.log('✓ Booking successful:', ref);
       } else {
         setErrors({ general: data.error || 'Booking failed' });
         console.error('❌ Booking error:', data);
@@ -153,9 +156,13 @@ export default function BookingPortal({ user, onLogout }) {
     setLoading(true);
     try {
       console.log('🔍 Searching for booking:', referenceNumber);
-      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/track?ref=${encodeURIComponent(referenceNumber)}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
+      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/track`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ referenceNumber })
       });
 
       const data = await response.json();
@@ -185,7 +192,9 @@ export default function BookingPortal({ user, onLogout }) {
         <h1>🏥 E-Bakuna Vaccination Portal</h1>
         <div className="user-info">
           <span>Welcome, {user?.first_name}</span>
-          <button onClick={onLogout} className="btn-logout">Logout</button>
+          {!hideLogout && (
+            <button onClick={onLogout} className="btn-logout">Logout</button>
+          )}
         </div>
       </div>
 

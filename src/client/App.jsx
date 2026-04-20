@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AuthService } from './services/AuthService.js';
 import Login from './components/Login.jsx';
 import Registration from './components/Registration.jsx';
-import CitizenDashboard from './components/CitizenDashboard.jsx';
 import StaffDashboard from './components/StaffDashboard.jsx';
 import ProviderDashboard from './components/ProviderDashboard.jsx';
 import BookingPortal from './components/BookingPortal.jsx';
@@ -33,6 +32,15 @@ export default function App() {
     });
   }, []);
 
+  const normalizeRole = (role) => {
+    if (!role) return '';
+    const raw = role.toString().trim().toLowerCase();
+    if (raw.includes('provider')) return 'provider';
+    if (raw.includes('clinic_staff') || raw.includes('staff')) return 'staff';
+    if (raw.includes('citizen')) return 'citizen';
+    return raw;
+  };
+
   const checkAuthentication = async () => {
     try {
       const authService = new AuthService();
@@ -53,28 +61,23 @@ export default function App() {
   };
 
   const routeByRole = (roles, description) => {
-    // Check standard roles first
-    if (roles && roles.length > 0) {
-      if (roles.includes('x_2009786_vaccinat.provider')) {
+    const normalizedRoles = Array.isArray(roles)
+      ? roles.map(normalizeRole)
+      : [];
+    const normalizedDescription = (description || '').toLowerCase();
+
+    if (normalizedRoles.includes('provider')) {
         setCurrentPage('provider-dashboard');
-      } else if (roles.includes('x_2009786_vaccinat.clinic_staff')) {
+    } else if (normalizedRoles.includes('staff')) {
         setCurrentPage('staff-dashboard');
-      } else if (roles.includes('x_2009786_vaccinat.citizen')) {
-        setCurrentPage('citizen-dashboard');
-      } else {
-        setCurrentPage('login');
-      }
-    } else if (description && description.includes('EBAKUNA_ROLE:')) {
-      // Fallback to description field if no roles assigned
-      if (description.includes('EBAKUNA_ROLE:staff')) {
+    } else if (normalizedRoles.includes('citizen')) {
+      setCurrentPage('citizen-dashboard');
+    } else if (normalizedDescription.includes('provider')) {
+      setCurrentPage('provider-dashboard');
+    } else if (normalizedDescription.includes('staff')) {
         setCurrentPage('staff-dashboard');
-      } else if (description.includes('EBAKUNA_ROLE:citizen')) {
-        setCurrentPage('citizen-dashboard');
-      } else {
-        setCurrentPage('login');
-      }
     } else {
-      setCurrentPage('login');
+      setCurrentPage('citizen-dashboard');
     }
   };
 
@@ -98,6 +101,20 @@ export default function App() {
     setCurrentPage(page);
   };
 
+  const renderRoleContent = () => {
+    switch (currentPage) {
+      case 'booking-portal':
+      case 'citizen-dashboard':
+        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout />;
+      case 'staff-dashboard':
+        return <StaffDashboard user={currentUser} onLogout={handleLogout} hideLogout />;
+      case 'provider-dashboard':
+        return <ProviderDashboard user={currentUser} onLogout={handleLogout} hideLogout />;
+      default:
+        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout />;
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -113,13 +130,28 @@ export default function App() {
     case 'registration':
       return <Registration onNavigate={navigateTo} />;
     case 'booking-portal':
-      return <BookingPortal user={currentUser} onLogout={handleLogout} />;
     case 'citizen-dashboard':
-      return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
     case 'staff-dashboard':
-      return <StaffDashboard user={currentUser} onLogout={handleLogout} />;
     case 'provider-dashboard':
-      return <ProviderDashboard user={currentUser} onLogout={handleLogout} />;
+      return (
+        <div className="app-shell">
+          <header className="app-shell-header">
+            <div>
+              <h1>E-Bakuna</h1>
+              <p>
+                {currentPage === 'provider-dashboard' && 'Provider portal'}
+                {currentPage === 'staff-dashboard' && 'Clinic staff portal'}
+                {currentPage === 'citizen-dashboard' && 'Citizen booking portal'}
+                {currentPage === 'booking-portal' && 'Citizen booking portal'}
+              </p>
+            </div>
+            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          </header>
+          <main className="app-shell-content">
+            {renderRoleContent()}
+          </main>
+        </div>
+      );
     default:
       return <Login onLogin={handleLogin} onNavigate={navigateTo} />;
   }

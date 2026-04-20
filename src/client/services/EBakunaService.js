@@ -214,6 +214,22 @@ export class EBakunaService {
     }
   }
 
+  async updateBooking(sysId, bookingData) {
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.scope}_citizen_booking/${sysId}`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify(bookingData)
+      })
+
+      const data = await this.handleResponse(response)
+      return data.result
+    } catch (error) {
+      console.error('Error updating booking:', error)
+      throw error
+    }
+  }
+
   // MEDICAL RECORDS
   async getMedicalRecords(filters = {}) {
     try {
