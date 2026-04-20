@@ -14,7 +14,23 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthentication();
+    const purgeOnce = async () => {
+      const purgeKey = 'ebakuna_users_purged_v1';
+      if (!localStorage.getItem(purgeKey)) {
+        try {
+          const authService = new AuthService();
+          await authService.resetAppUsers();
+          localStorage.setItem(purgeKey, 'true');
+          console.log('✓ App users purged once for clean test run');
+        } catch (error) {
+          console.warn('Cleanup skipped or failed:', error);
+        }
+      }
+    };
+
+    purgeOnce().finally(() => {
+      checkAuthentication();
+    });
   }, []);
 
   const checkAuthentication = async () => {

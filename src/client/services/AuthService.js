@@ -93,6 +93,24 @@ export class AuthService {
     }
   }
 
+  async resetAppUsers() {
+    const response = await fetch(`${this.authApiUrl}/reset-users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await this.readResponsePayload(response);
+    if (!response.ok) {
+      throw new Error(this.getErrorMessage(payload, 'Failed to reset app users'));
+    }
+
+    return payload;
+  }
+
   async register(userData) {
     console.log('📝 Registering user:', userData.username);
     

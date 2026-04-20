@@ -14,7 +14,22 @@ export default function EBakunaApp() {
   const [ebakunaService] = useState(() => new EBakunaService())
 
   useEffect(() => {
-    checkAuthStatus()
+    const purgeOnce = async () => {
+      const purgeKey = 'ebakuna_users_purged_v1'
+      if (!localStorage.getItem(purgeKey)) {
+        try {
+          await authService.resetAppUsers()
+          localStorage.setItem(purgeKey, 'true')
+          console.log('✓ App users purged once for clean test run')
+        } catch (error) {
+          console.warn('Cleanup skipped or failed:', error)
+        }
+      }
+    }
+
+    purgeOnce().finally(() => {
+      checkAuthStatus()
+    })
   }, [])
 
   const checkAuthStatus = async () => {

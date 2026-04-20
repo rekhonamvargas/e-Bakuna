@@ -147,6 +147,65 @@ function parseRequestBody(request) {
 }
 
 /**
+ * TEMPORARY CLEANUP - delete all app users with credentials.
+ * This is intentionally scoped to users that have records in the app credential table.
+ */
+export function resetAppUsers(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+
+    try {
+        gs.warn('===== RESET APP USERS START =====');
+
+        const credentialIds = [];
+        const userIds = [];
+
+        const creds = new GlideRecord('x_2009786_vaccinat_user_credential');
+        creds.query();
+        while (creds.next()) {
+            const credId = creds.getUniqueValue();
+            const userId = creds.getValue('user');
+            credentialIds.push(credId);
+            if (userId) userIds.push(userId.toString());
+        }
+
+        let deletedCreds = 0;
+        for (let i = 0; i < credentialIds.length; i++) {
+            const cred = new GlideRecord('x_2009786_vaccinat_user_credential');
+            if (cred.get(credentialIds[i])) {
+                if (cred.deleteRecord()) deletedCreds++;
+            }
+        }
+
+        let deletedUsers = 0;
+        for (let j = 0; j < userIds.length; j++) {
+            const user = new GlideRecord('sys_user');
+            if (user.get(userIds[j])) {
+                if (user.deleteRecord()) deletedUsers++;
+            }
+        }
+
+        gs.warn('RESET APP USERS DONE: creds=' + deletedCreds + ', users=' + deletedUsers);
+
+        response.setStatus(200);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            deleted: {
+                credentials: deletedCreds,
+                users: deletedUsers
+            }
+        }));
+    } catch (e) {
+        gs.error('RESET APP USERS ERROR: ' + e.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: e.message
+        }));
+    }
+}
+
+/**
  * LOGIN - Direct sys_user query with phone field for password
  */
 export function authenticateUser(request, response) {
