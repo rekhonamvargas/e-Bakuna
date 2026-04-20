@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './BookingPortal.css';
 
-export default function BookingPortal({ user, onLogout, hideLogout = false }) {
+export default function BookingPortal({ user, onLogout, hideLogout = false, hideHeader = false }) {
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'track'
   const [stats, setStats] = useState({
     citizensBooked: 0,
@@ -188,15 +188,17 @@ export default function BookingPortal({ user, onLogout, hideLogout = false }) {
 
   return (
     <div className="booking-portal">
-      <div className="portal-header">
-        <h1>🏥 E-Bakuna Vaccination Portal</h1>
-        <div className="user-info">
-          <span>Welcome, {user?.first_name}</span>
-          {!hideLogout && (
-            <button onClick={onLogout} className="btn-logout">Logout</button>
-          )}
+      {!hideHeader && (
+        <div className="portal-header">
+          <h1>🏥 E-Bakuna Vaccination Portal</h1>
+          <div className="user-info">
+            <span>Welcome, {user?.first_name}</span>
+            {!hideLogout && (
+              <button onClick={onLogout} className="btn-logout">Logout</button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <section className="role-overview citizen-overview">
         <div className="role-overview-copy">

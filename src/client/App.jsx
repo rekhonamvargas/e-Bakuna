@@ -105,13 +105,13 @@ export default function App() {
     switch (currentPage) {
       case 'booking-portal':
       case 'citizen-dashboard':
-        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout />;
+        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout hideHeader />;
       case 'staff-dashboard':
-        return <StaffDashboard user={currentUser} onLogout={handleLogout} hideLogout />;
+        return <StaffDashboard user={currentUser} onLogout={handleLogout} hideLogout hideHeader />;
       case 'provider-dashboard':
-        return <ProviderDashboard user={currentUser} onLogout={handleLogout} hideLogout />;
+        return <ProviderDashboard user={currentUser} onLogout={handleLogout} hideLogout hideHeader />;
       default:
-        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout />;
+        return <BookingPortal user={currentUser} onLogout={handleLogout} hideLogout hideHeader />;
     }
   };
 

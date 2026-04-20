@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { EBakunaService } from '../services/EBakunaService.js';
 import './StaffDashboard.css';
 
-export default function ProviderDashboard({ user, onLogout, hideLogout = false }) {
+export default function ProviderDashboard({ user, onLogout, hideLogout = false, hideHeader = false }) {
   const [clinics, setClinics] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -53,23 +53,25 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false }
 
   return (
     <div className="staff-dashboard">
-      <nav className="navbar">
-        <div className="container">
-          <div className="navbar-content">
-            <div className="navbar-brand">E-Bakuna - Provider Portal</div>
-            <div className="navbar-actions">
-              <span className="user-name">
-                {user.first_name} {user.last_name}
-              </span>
-              {!hideLogout && (
-                <button className="btn-logout" onClick={onLogout}>
-                  Logout
-                </button>
-              )}
+      {!hideHeader && (
+        <nav className="navbar">
+          <div className="container">
+            <div className="navbar-content">
+              <div className="navbar-brand">E-Bakuna - Provider Portal</div>
+              <div className="navbar-actions">
+                <span className="user-name">
+                  {user.first_name} {user.last_name}
+                </span>
+                {!hideLogout && (
+                  <button className="btn-logout" onClick={onLogout}>
+                    Logout
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       <div className="container">
         <section className="role-overview provider-overview">
