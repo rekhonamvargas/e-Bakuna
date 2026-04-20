@@ -35,16 +35,13 @@ export class AuthService {
     console.log('🔐 Logging in:', username);
     
     try {
-      const params = new URLSearchParams();
-      params.append('username', username);
-      params.append('password', password);
-
       const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: params.toString()
+        body: JSON.stringify({ username, password })
       });
 
       const payload = await this.readResponsePayload(response);
