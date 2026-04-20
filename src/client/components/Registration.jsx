@@ -259,6 +259,7 @@ export default function Registration({ onNavigate }) {
               >
                 <option value="citizen">👤 Citizen (Book Vaccinations)</option>
                 <option value="staff">👨‍⚕️ Clinic Staff (Manage Bookings)</option>
+                <option value="provider">🏥 Provider (Manage Clinics)</option>
               </select>
             </div>
 
