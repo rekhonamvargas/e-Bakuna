@@ -92,6 +92,10 @@ declare global {
                         table: 'sys_ws_operation'
                         id: '5fcf8d40c0db49d6a91876a45d8c2d5e'
                     }
+                    ebakuna_auth_register_route: {
+                        table: 'sys_ws_operation'
+                        id: '2cb0ad470ff346c09c4d18c3cdb9fa31'
+                    }
                     ebakuna_auth_version_1: {
                         table: 'sys_ws_version'
                         id: '40a261368fda4ef3aa7b92e2093d0509'
