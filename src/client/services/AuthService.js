@@ -53,11 +53,42 @@ export class AuthService {
         throw new Error('Invalid authentication response');
       }
 
+      // Store user session in localStorage
+      localStorage.setItem('ebakuna_user', JSON.stringify(responseData.user));
+      localStorage.setItem('ebakuna_token', new Date().getTime().toString());
+      
       console.log('✓ Login successful:', responseData.user);
       return responseData.user;
       
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  async getCurrentUser() {
+    try {
+      const userJson = localStorage.getItem('ebakuna_user');
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        console.log('✓ Current user from session:', user);
+        return user;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  }
+
+  async logout() {
+    try {
+      localStorage.removeItem('ebakuna_user');
+      localStorage.removeItem('ebakuna_token');
+      console.log('✓ Logged out');
+      return true;
+    } catch (error) {
+      console.error('Logout error:', error);
       throw error;
     }
   }

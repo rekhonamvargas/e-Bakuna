@@ -1,6 +1,6 @@
 ﻿import '@servicenow/sdk/global'
 import { RestApi } from '@servicenow/sdk/core'
-import { authenticateUser, registerUser, createBooking, trackBooking } from '../../server/auth-handler.js'
+import { authenticateUser, registerUser, createBooking, trackBooking, getDashboardStats } from '../../server/auth-handler.js'
 
 /**
  * Scripted REST API for eBakuna Authentication
@@ -97,7 +97,22 @@ RestApi({
             authorization: false,
             internalRole: false,
             enforce_acl: []
-    },
+        },
+        {
+            $id: Now.ID['ebakuna_stats_route'],
+            name: 'Stats',
+            path: '/stats',
+            method: 'GET',
+            script: getDashboardStats,
+            short_description: 'Get dashboard statistics',
+            version: 1,
+            consumes: 'application/json',
+            produces: 'application/json',
+            authentication: false,
+            authorization: false,
+            internalRole: false,
+            enforce_acl: []
+        }
     ],
     versions: [{
         $id: Now.ID['ebakuna_auth_version_1'],

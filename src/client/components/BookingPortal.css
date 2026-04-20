@@ -43,6 +43,154 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1000px;
+  margin: 32px auto;
+  padding: 0 40px;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid #fee2e2;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.08);
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  border-color: #b91c1c;
+  box-shadow: 0 8px 24px rgba(185, 28, 28, 0.15);
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-family: 'Merriweather', serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1000px;
+  margin: 32px auto;
+  padding: 0 40px;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid #fee2e2;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.08);
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  border-color: #b91c1c;
+  box-shadow: 0 8px 24px rgba(185, 28, 28, 0.15);
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-family: 'Merriweather', serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .portal-tabs {
   display: flex;
   gap: 0;

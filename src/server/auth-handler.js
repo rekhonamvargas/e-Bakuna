@@ -76,6 +76,7 @@ export function authenticateUser(request, response) {
         const password = credentials.password.toString();
         
         gs.info('LOGIN: Authenticating user: ' + username);
+        gs.info('LOGIN: Received password length: ' + password.length);
         
         // Look up user
         const user = new GlideRecord('sys_user');
@@ -94,16 +95,38 @@ export function authenticateUser(request, response) {
             return;
         }
         
-        // Simple password check (for testing - in production use proper hashing)
-        if (!password || password.length === 0) {
-            gs.info('LOGIN: Empty password');
+        // Retrieve stored credentials from description field
+        // Format: CREDS{username}:{password} ROLE:{role}
+        const description = user.getValue('description') || '';
+        gs.info('LOGIN: Description field: ' + description);
+        
+        let storedPassword = '';
+        if (description.indexOf('CREDS{') === 0) {
+            const credsEnd = description.indexOf('}:');
+            if (credsEnd > 0) {
+                const storageUsername = description.substring(6, credsEnd);
+                const pwdStart = credsEnd + 2;
+                const roleStart = description.indexOf(' ROLE:');
+                const pwdEnd = roleStart > 0 ? roleStart : description.length;
+                storedPassword = description.substring(pwdStart, pwdEnd).trim();
+                gs.info('LOGIN: Extracted credentials - user: ' + storageUsername + ', pwd length: ' + storedPassword.length);
+            }
+        }
+        
+        gs.info('LOGIN: Password check - received length: ' + password.length + ', stored length: ' + storedPassword.length);
+        gs.info('LOGIN: Password match: ' + (password === storedPassword));
+        
+        if (!storedPassword || storedPassword !== password) {
+            gs.info('LOGIN: Authentication failed for ' + username);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Password required'
+                error: 'Invalid username or password'
             }));
             return;
         }
+        
+        gs.info('LOGIN: ✓ Password verified for ' + username);
         
         // Check if user is locked
         if (user.getValue('locked_out') == 'true') {
@@ -148,6 +171,22 @@ export function authenticateUser(request, response) {
 function getRoles(userId) {
     const roles = [];
     try {
+        // Get user to check description field for role
+        const userGr = new GlideRecord('sys_user');
+        userGr.get(userId);
+        const description = userGr.getValue('description') || '';
+        
+        // Extract role from description: CREDS{username}:password ROLE:{role}
+        if (description.indexOf('ROLE:') > 0) {
+            const roleStart = description.indexOf('ROLE:') + 5;
+            const role = description.substring(roleStart).trim();
+            if (role) {
+                roles.push(role);
+                gs.info('getRoles: Found role from description - ' + role);
+            }
+        }
+        
+        // Also check sys_user_has_role table for standard roles
         const userRoles = new GlideRecord('sys_user_has_role');
         userRoles.addQuery('user', userId);
         userRoles.query();
@@ -233,10 +272,13 @@ export function registerUser(request, response) {
         newUser.setValue('email', data.email);
         newUser.setValue('first_name', data.firstName);
         newUser.setValue('last_name', data.lastName);
-        newUser.setValue('password', data.password); // ServiceNow handles password hashing
         newUser.setValue('active', true);
-        // Store role in a custom field (if it exists) or in a note
-        newUser.setValue('description', 'EBAKUNA_ROLE:' + role);
+        
+        // Store credentials in description field: CREDS{username}:password ROLE:{role}
+        const credString = 'CREDS{' + data.username + '}:' + data.password + ' ROLE:' + role;
+        newUser.setValue('description', credString);
+        
+        gs.info('REGISTER: Storing credentials - ' + credString);
         
         const userId = newUser.insert();
         
@@ -250,7 +292,13 @@ export function registerUser(request, response) {
             return;
         }
         
-        gs.info('✓ User registered: ' + data.username);
+        gs.info('✓ User registered: ' + data.username + ' (ID: ' + userId + ')');
+        
+        // Verify the user was created and password was saved
+        const verifyUser = new GlideRecord('sys_user');
+        verifyUser.get(userId);
+        const savedCreds = verifyUser.getValue('description') || '';
+        gs.info('REGISTER: Verification - ' + (savedCreds.indexOf('CREDS{') === 0 ? '✓ CREDENTIALS SAVED' : '✗ CREDENTIALS NOT SAVED'));
         
         // Fetch the new user to return complete info
         const user = new GlideRecord('sys_user');
@@ -304,14 +352,20 @@ export function createBooking(request, response) {
         
         let data = parseRequestBody(request);
         
-        // Validate required fields
-        if (!data || !data.fullName || !data.referenceNumber || !data.vaccineType || !data.preferredDate) {
+        // Validate required fields (referenceNumber is optional - backend generates it)
+        if (!data || !data.fullName || !data.vaccineType || !data.preferredDate) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Missing required booking fields'
+                error: 'Missing required booking fields: fullName, vaccineType, preferredDate'
             }));
             return;
+        }
+        
+        // Generate unique reference number if not provided
+        let refNum = data.referenceNumber;
+        if (!refNum) {
+            refNum = 'EBK-' + Math.floor(100000 + Math.random() * 900000);
         }
         
         // Create booking record in custom table
@@ -326,9 +380,10 @@ export function createBooking(request, response) {
         booking.setValue('preferred_date', data.preferredDate);
         booking.setValue('dose_number', data.doseNumber || '1');
         booking.setValue('health_unit', data.healthUnit || '');
-        booking.setValue('reference_number', data.referenceNumber);
+        booking.setValue('reference_number', refNum);
         booking.setValue('status', 'pending'); // pending, approved, rejected
         booking.setValue('created_date', new Date().toISOString());
+        booking.setValue('user_id', data.user_id || '');
         
         const bookingId = booking.insert();
         
@@ -342,13 +397,13 @@ export function createBooking(request, response) {
             return;
         }
         
-        gs.info('✓ Booking created: ' + data.referenceNumber);
+        gs.info('✓ Booking created: ' + refNum + ' with ID: ' + bookingId);
         
         response.setStatus(201);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'success',
             message: 'Booking created successfully',
-            referenceNumber: data.referenceNumber,
+            referenceNumber: refNum,
             bookingId: bookingId
         }));
         
@@ -393,9 +448,10 @@ export function trackBooking(request, response) {
             return;
         }
         
-        // Look up booking by reference number
+        // Look up booking by reference number - try exact match first
         const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
-        booking.addQuery('reference_number', referenceNumber);
+        booking.addQuery('reference_number', 'CONTAINS', referenceNumber);
+        booking.orderByDesc('created_date');
         booking.query();
         
         if (!booking.next()) {
@@ -403,7 +459,7 @@ export function trackBooking(request, response) {
             response.setStatus(404);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
-                error: 'Booking not found',
+                error: 'Booking not found. Reference: ' + referenceNumber,
                 referenceNumber: referenceNumber
             }));
             return;
@@ -429,6 +485,67 @@ export function trackBooking(request, response) {
         
     } catch (error) {
         gs.error('TRACK BOOKING ERROR: ' + error.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: 'Server error: ' + error.message
+        }));
+    }
+}
+
+/**
+ * Get dashboard statistics
+ * @param {Object} request - REST API request
+ * @param {Object} response - REST API response
+ */
+export function getDashboardStats(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    
+    try {
+        gs.info('📊 DASHBOARD STATS - ' + new Date().toISOString());
+        
+        if (request.method === 'OPTIONS') {
+            response.setStatus(200);
+            response.getStreamWriter().writeString('{"status":"ok"}');
+            return;
+        }
+        
+        // Get total bookings
+        const totalBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        totalBookings.query();
+        const totalBookingsCount = totalBookings.getRowCount();
+        
+        // Get completed bookings
+        const completedBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        completedBookings.addQuery('status', 'completed');
+        completedBookings.query();
+        const completedCount = completedBookings.getRowCount();
+        
+        // Get pending bookings
+        const pendingBookings = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        pendingBookings.addQuery('status', 'pending');
+        pendingBookings.query();
+        const pendingCount = pendingBookings.getRowCount();
+        
+        const stats = {
+            totalBookings: totalBookingsCount,
+            completedBookings: completedCount,
+            pendingBookings: pendingCount
+        };
+        
+        gs.info('✓ Dashboard stats retrieved');
+        
+        response.setStatus(200);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            data: stats
+        }));
+        
+    } catch (error) {
+        gs.error('DASHBOARD STATS ERROR: ' + error.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',

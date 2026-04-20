@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './BookingPortal.css';
 
 export default function BookingPortal({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('book'); // 'book' or 'track'
+  const [stats, setStats] = useState({
+    citizensBooked: 0,
+    activeClinics: 0,
+    availableSlots: 0
+  });
   const [formData, setFormData] = useState({
     fullName: user?.first_name + ' ' + user?.last_name || '',
     contactNo: '',
@@ -18,6 +23,34 @@ export default function BookingPortal({ user, onLogout }) {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useEffect(() => {
+    loadDashboardStats();
+    // Load saved reference numbers from localStorage
+    const savedRefs = JSON.parse(localStorage.getItem('ebakuna_bookings') || '[]');
+    console.log('📋 Loaded bookings:', savedRefs);
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/stats`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        setStats({
+          citizensBooked: data.citizensBooked || 0,
+          activeClinics: data.activeClinics || 0,
+          availableSlots: data.availableSlots || 0
+        });
+      }
+    } catch (err) {
+      console.error('Error loading stats:', err);
+      // Use default values if API fails
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,10 +85,7 @@ export default function BookingPortal({ user, onLogout }) {
 
     setLoading(true);
     try {
-      // Generate reference number
-      const ref = 'EBK-' + Math.floor(10000 + Math.random() * 90000);
-      
-      // Save booking to backend
+      // Don't generate ref on client - let backend do it
       const params = new URLSearchParams();
       params.append('user_id', user.sys_id);
       params.append('fullName', formData.fullName);
@@ -66,8 +96,6 @@ export default function BookingPortal({ user, onLogout }) {
       params.append('preferredDate', formData.preferredDate);
       params.append('doseNumber', formData.doseNumber);
       params.append('healthUnit', formData.healthUnit);
-      params.append('referenceNumber', ref);
-      params.append('status', 'pending');
 
       const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/booking?${params.toString()}`, {
         method: 'POST',
@@ -75,8 +103,22 @@ export default function BookingPortal({ user, onLogout }) {
       });
 
       const data = await response.json();
-      if (data.status === 'success') {
-        setReferenceNumber(ref);
+      console.log('📅 Booking response:', data);
+      
+      if (data.status === 'success' && data.referenceNumber) {
+        // Store booking reference in localStorage
+        const savedRefs = JSON.parse(localStorage.getItem('ebakuna_bookings') || '[]');
+        savedRefs.push({
+          referenceNumber: data.referenceNumber,
+          bookedDate: new Date().toISOString(),
+          fullName: formData.fullName,
+          vaccineType: formData.vaccineType,
+          preferredDate: formData.preferredDate
+        });
+        localStorage.setItem('ebakuna_bookings', JSON.stringify(savedRefs));
+        
+        // Use returned reference number from backend
+        setReferenceNumber(data.referenceNumber);
         setShowConfirmation(true);
         setFormData({
           fullName: user?.first_name + ' ' + user?.last_name || '',
@@ -88,11 +130,14 @@ export default function BookingPortal({ user, onLogout }) {
           doseNumber: '1st Dose',
           healthUnit: 'RHU'
         });
+        console.log('✓ Booking successful:', data.referenceNumber);
       } else {
         setErrors({ general: data.error || 'Booking failed' });
+        console.error('❌ Booking error:', data);
       }
     } catch (err) {
       setErrors({ general: err.message || 'Error creating booking' });
+      console.error('❌ Booking exception:', err);
     } finally {
       setLoading(false);
     }
@@ -107,19 +152,28 @@ export default function BookingPortal({ user, onLogout }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/track?ref=${referenceNumber}`, {
+      console.log('🔍 Searching for booking:', referenceNumber);
+      const response = await fetch(`/api/x_2009786_vaccinat/v1/ebakuna_auth/track?ref=${encodeURIComponent(referenceNumber)}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
 
       const data = await response.json();
-      if (data.status === 'success') {
+      console.log('🔍 Track response:', data);
+      
+      if (data.status === 'success' && data.booking) {
         setBookingStatus(data.booking);
+        setErrors({});
+        console.log('✓ Booking found:', data.booking);
       } else {
+        setBookingStatus(null);
         setErrors({ referenceNumber: data.error || 'Booking not found' });
+        console.warn('⚠️ Booking not found:', referenceNumber);
       }
     } catch (err) {
+      setBookingStatus(null);
       setErrors({ referenceNumber: err.message || 'Error tracking booking' });
+      console.error('❌ Tracking exception:', err);
     } finally {
       setLoading(false);
     }
@@ -132,6 +186,24 @@ export default function BookingPortal({ user, onLogout }) {
         <div className="user-info">
           <span>Welcome, {user?.first_name}</span>
           <button onClick={onLogout} className="btn-logout">Logout</button>
+        </div>
+      </div>
+
+      <div className="dashboard-stats">
+        <div className="stat-card">
+          <div className="stat-icon">👥</div>
+          <div className="stat-value">{stats.citizensBooked}</div>
+          <div className="stat-label">Citizens Booked</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🏥</div>
+          <div className="stat-value">{stats.activeClinics}</div>
+          <div className="stat-label">Active Clinics</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">✅</div>
+          <div className="stat-value">{stats.availableSlots}</div>
+          <div className="stat-label">Available Slots</div>
         </div>
       </div>
 

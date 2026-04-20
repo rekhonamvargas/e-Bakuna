@@ -5,6 +5,7 @@ import Registration from './components/Registration.jsx';
 import CitizenDashboard from './components/CitizenDashboard.jsx';
 import StaffDashboard from './components/StaffDashboard.jsx';
 import ProviderDashboard from './components/ProviderDashboard.jsx';
+import BookingPortal from './components/BookingPortal.jsx';
 import './App.css';
 
 export default function App() {
@@ -95,6 +96,8 @@ export default function App() {
       return <Login onLogin={handleLogin} onNavigate={navigateTo} />;
     case 'registration':
       return <Registration onNavigate={navigateTo} />;
+    case 'booking-portal':
+      return <BookingPortal user={currentUser} onLogout={handleLogout} />;
     case 'citizen-dashboard':
       return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
     case 'staff-dashboard':

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './Login.css'
+import { AuthService } from '../services/AuthService.js'
 
 export default function Login({ onLogin, onNavigate }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -12,11 +13,16 @@ export default function Login({ onLogin, onNavigate }) {
     setError('')
 
     try {
-      const result = await onLogin(credentials)
-      if (!result.success) {
-        setError(result.error || 'Login failed')
-      }
+      const authService = new AuthService()
+      console.log('🔐 Attempting login with:', credentials.username)
+      
+      const user = await authService.login(credentials.username, credentials.password)
+      console.log('✓ Login successful:', user)
+      
+      // Call parent handler to update app state
+      onLogin(user)
     } catch (error) {
+      console.error('❌ Login error:', error)
       setError(error.message || 'Login failed')
     } finally {
       setLoading(false)

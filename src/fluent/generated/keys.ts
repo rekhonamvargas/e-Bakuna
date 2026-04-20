@@ -108,6 +108,10 @@ declare global {
                         table: 'sys_ws_operation'
                         id: 'f4e7844b82e54f01ac2d97a95e03c6f4'
                     }
+                    ebakuna_stats_route: {
+                        table: 'sys_ws_operation'
+                        id: 'bcf274bb32b0481db2bb5c5bd92e8ee4'
+                    }
                     medical_citizen_create: {
                         table: 'sys_security_acl'
                         id: 'c3cc61be402740ccbdd91ea43ad199c1'
