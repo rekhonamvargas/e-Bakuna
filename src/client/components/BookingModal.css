@@ -1,0 +1,278 @@
+.booking-modal {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 20px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+  animation: modalSlide 0.4s ease-out;
+}
+
+.booking-header {
+  background: linear-gradient(135deg, #7f0000, #b91c1c);
+  color: #fff;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 20px 20px 0 0;
+}
+
+.booking-title {
+  font-family: 'Merriweather', serif;
+  font-size: 19px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.close-button {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.booking-content {
+  padding: 28px;
+}
+
+/* Schedule Summary */
+.schedule-summary {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.schedule-summary-title {
+  font-family: 'Merriweather', serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: #7f0000;
+  margin: 0 0 16px;
+}
+
+.schedule-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.schedule-summary-item .label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.schedule-summary-item .value {
+  color: #111827;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Dose Selection */
+.dose-selection {
+  margin-bottom: 24px;
+}
+
+/* Requirements Notice */
+.requirements-notice {
+  background: linear-gradient(135deg, #fff1f2, #fee2e2);
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.requirements-title {
+  font-family: 'Merriweather', serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: #7f0000;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirements-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #7f0000;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.requirements-list li::before {
+  content: '✓';
+  width: 20px;
+  height: 20px;
+  background: #b91c1c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Actions */
+.booking-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.booking-actions .btn-secondary {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.booking-actions .btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Confirmation Modal Styles */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 40px;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(22,163,74,0.3);
+}
+
+.success-title {
+  font-family: 'Merriweather', serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: #7f0000;
+  margin-bottom: 12px;
+}
+
+.success-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+
+.reference-box {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.reference-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.reference-number {
+  font-family: 'Merriweather', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: #b91c1c;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.reference-note {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.next-steps {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.next-steps-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.next-steps-content {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .booking-modal {
+    width: 95%;
+  }
+  
+  .booking-content {
+    padding: 20px;
+  }
+  
+  .booking-actions {
+    flex-direction: column;
+  }
+  
+  .schedule-summary-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .schedule-summary-item .value {
+    text-align: left;
+  }
+}

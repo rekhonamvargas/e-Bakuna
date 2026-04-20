@@ -1,0 +1,137 @@
+.registration-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: #f8fafc;
+}
+
+.registration-card {
+  max-width: 480px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #fee2e2;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+.registration-header {
+  background: linear-gradient(135deg, #7f0000, #b91c1c);
+  color: #fff;
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.registration-logo {
+  font-family: 'Merriweather', serif;
+  font-size: 28px;
+  font-weight: 900;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.registration-tagline {
+  color: #fecaca;
+  font-size: 13px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.registration-body {
+  padding: 32px 28px;
+}
+
+.registration-form {
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.registration-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.registration-footer {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.registration-footer p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: #7f0000;
+}
+
+.required {
+  color: #b91c1c;
+}
+
+.form-input.error {
+  border-color: #b91c1c;
+  background: #fff1f2;
+}
+
+.field-error {
+  display: block;
+  color: #b91c1c;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Success Modal Styles */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 40px;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(22,163,74,0.3);
+}
+
+.success-title {
+  font-family: 'Merriweather', serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: #7f0000;
+  margin-bottom: 12px;
+}
+
+.success-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+  line-height: 1.8;
+}

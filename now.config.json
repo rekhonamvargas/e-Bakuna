@@ -1,0 +1,6 @@
+{
+  "scope": "x_2009786_vaccinat",
+  "scopeId": "5c78c38ac3dc83103b31b1f1b40131a5",
+  "name": "Vaccination",
+  "tsconfigPath": "./src/server/tsconfig.json"
+}

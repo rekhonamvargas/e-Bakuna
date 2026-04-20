@@ -1,0 +1,56 @@
+.staff-dashboard {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Summary Section */
+.summary-section {
+  padding: 24px 0;
+}
+
+.section-title {
+  font-family: 'Merriweather', serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: #7f0000;
+  margin: 0 0 20px;
+}
+
+/* Appointments Section */
+.appointments-section {
+  padding-bottom: 40px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.reference-cell {
+  font-family: 'Merriweather', serif;
+  font-weight: 700;
+  color: #b91c1c;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.status-select {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 2px rgba(185,28,28,0.1);
+}
+
+/* User Name */
+.user-name {
+  color: #fecaca;
+  font-size: 14px;
+  font-weight: 500;
+}
