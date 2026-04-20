@@ -1,6 +1,6 @@
-import '@servicenow/sdk/global'
+﻿import '@servicenow/sdk/global'
 import { RestApi } from '@servicenow/sdk/core'
-import { authenticateUser, registerUser } from '../../server/auth-handler.js'
+import { authenticateUser, registerUser, createBooking, trackBooking } from '../../server/auth-handler.js'
 
 /**
  * Scripted REST API for eBakuna Authentication
@@ -56,7 +56,48 @@ RestApi({
                 firstName: "John",
                 lastName: "Doe"
             })
-        }
+        },
+        {
+            $id: Now.ID['ebakuna_booking_create_route'],
+            name: 'Booking',
+            path: '/booking',
+            method: 'POST',
+            script: createBooking,
+            short_description: 'Create a new vaccination booking request',
+            version: 1,
+            consumes: 'application/json',
+            produces: 'application/json',
+            authentication: false,
+            authorization: false,
+            internalRole: false,
+            enforce_acl: [],
+            request_example: JSON.stringify({
+                fullName: "John Doe",
+                contactNo: "09123456789",
+                dateOfBirth: "1990-05-15",
+                barangay: "Cebu City",
+                vaccineType: "Pfizer",
+                preferredDate: "2024-01-20",
+                doseNumber: "1",
+                healthUnit: "Barangay Clinic",
+                referenceNumber: "EBK-12345"
+            })
+        },
+        {
+            $id: Now.ID['ebakuna_booking_track_route'],
+            name: 'Track',
+            path: '/track',
+            method: 'GET',
+            script: trackBooking,
+            short_description: 'Track booking status by reference number',
+            version: 1,
+            consumes: 'application/json',
+            produces: 'application/json',
+            authentication: false,
+            authorization: false,
+            internalRole: false,
+            enforce_acl: []
+    },
     ],
     versions: [{
         $id: Now.ID['ebakuna_auth_version_1'],

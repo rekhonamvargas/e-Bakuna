@@ -1,67 +1,39 @@
 import { gs, GlideRecord } from '@servicenow/glide';
 
 /**
- * Extract and parse request body from Fluent SDK request object
- * Tries multiple methods to get the request body
+ * Extract request body - from POST body or query params
  */
 function parseRequestBody(request) {
     try {
-        gs.info('🔍 BEGIN parseRequestBody - checking all methods');
-        
-        // Method 1: Try request.body (some SDKs use this)
-        if (request.body) {
-            gs.info('✓ Method 1: request.body exists');
-            if (typeof request.body === 'string') {
-                gs.info('✓ Body is string: ' + request.body);
-                return JSON.parse(request.body);
-            } else if (typeof request.body === 'object') {
-                gs.info('✓ Body is object');
-                return request.body;
-            }
+        // Try POST body first
+        if (request.body && Object.keys(request.body).length > 0) {
+            gs.info('✓ Data from POST body');
+            return request.body;
         }
         
-        // Method 2: Try getBodyAsString() - common in ServiceNow
-        if (request.getBodyAsString && typeof request.getBodyAsString === 'function') {
-            try {
-                const bodyStr = request.getBodyAsString();
-                gs.info('✓ Method 2: getBodyAsString() returned: ' + bodyStr);
-                if (bodyStr && bodyStr.length > 0) {
-                    return JSON.parse(bodyStr);
-                }
-            } catch (e) {
-                gs.error('✗ getBodyAsString failed: ' + e.message);
-            }
+        // Try query parameters (workaround for body parsing issues)
+        if (request.queryParams && Object.keys(request.queryParams).length > 0) {
+            gs.info('✓ Data from queryParams');
+            return request.queryParams;
         }
         
-        // Method 3: Try to read from input stream
+        // Try stream
         if (request.getInputStream && typeof request.getInputStream === 'function') {
             try {
-                gs.info('✓ Method 3: Trying getInputStream()');
                 const inputStream = request.getInputStream();
-                if (inputStream) {
-                    const streamReader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream));
-                    let line;
-                    let bodyStr = '';
-                    while ((line = streamReader.readLine()) != null) {
-                        bodyStr += line;
-                    }
-                    gs.info('✓ Read from stream: ' + bodyStr);
-                    if (bodyStr && bodyStr.length > 0) {
+                if (inputStream && inputStream.available && inputStream.available() > 0) {
+                    const scanner = new java.util.Scanner(inputStream).useDelimiter("\\A");
+                    const bodyStr = scanner.hasNext() ? scanner.next() : "";
+                    if (bodyStr && bodyStr.trim().length > 0) {
+                        gs.info('✓ Data from stream');
                         return JSON.parse(bodyStr);
                     }
                 }
             } catch (e) {
-                gs.error('✗ getInputStream method failed: ' + e.message);
+                gs.warn('Stream read failed');
             }
         }
         
-        // Method 4: Check REST request object for payload
-        if (request.rest_payload) {
-            gs.info('✓ Method 4: Found rest_payload');
-            return JSON.parse(request.rest_payload);
-        }
-        
-        gs.warn('⚠️ No request body found using any method');
         return null;
     } catch (e) {
         gs.error('❌ parseRequestBody error: ' + e.message);
@@ -81,7 +53,7 @@ export function authenticateUser(request, response) {
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('🔐 AUTH API v2 - Request at: ' + new Date().toISOString());
+        gs.info('🔐 LOGIN - ' + new Date().toISOString());
         
         if (request.method === 'OPTIONS') {
             response.setStatus(200);
@@ -92,7 +64,6 @@ export function authenticateUser(request, response) {
         const credentials = parseRequestBody(request);
         
         if (!credentials || !credentials.username || !credentials.password) {
-            gs.info('❌ AUTH API: Missing credentials');
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -104,7 +75,7 @@ export function authenticateUser(request, response) {
         const username = credentials.username.toString();
         const password = credentials.password.toString();
         
-        gs.info('AUTH API: Authenticating user: ' + username);
+        gs.info('LOGIN: Authenticating user: ' + username);
         
         // Look up user
         const user = new GlideRecord('sys_user');
@@ -114,7 +85,7 @@ export function authenticateUser(request, response) {
         user.query();
         
         if (!user.next()) {
-            gs.info('AUTH API: User not found: ' + username);
+            gs.info('LOGIN: User not found: ' + username);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -125,7 +96,7 @@ export function authenticateUser(request, response) {
         
         // Simple password check (for testing - in production use proper hashing)
         if (!password || password.length === 0) {
-            gs.info('AUTH API: Empty password');
+            gs.info('LOGIN: Empty password');
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -136,7 +107,7 @@ export function authenticateUser(request, response) {
         
         // Check if user is locked
         if (user.getValue('locked_out') == 'true') {
-            gs.info('AUTH API: User locked: ' + username);
+            gs.info('LOGIN: User locked: ' + username);
             response.setStatus(401);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -155,7 +126,7 @@ export function authenticateUser(request, response) {
             roles: getRoles(user.getUniqueValue())
         };
         
-        gs.info('AUTH API: Login successful: ' + username);
+        gs.info('LOGIN: Success for ' + username);
         
         response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
@@ -164,7 +135,7 @@ export function authenticateUser(request, response) {
         }));
         
     } catch (error) {
-        gs.error('AUTH API: Handler error: ' + error.message);
+        gs.error('LOGIN ERROR: ' + error.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
@@ -204,7 +175,7 @@ export function registerUser(request, response) {
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
     
     try {
-        gs.info('📝 REGISTER API - Request at: ' + new Date().toISOString());
+        gs.info('📝 REGISTER - ' + new Date().toISOString());
         
         if (request.method === 'OPTIONS') {
             response.setStatus(200);
@@ -214,16 +185,8 @@ export function registerUser(request, response) {
         
         let data = parseRequestBody(request);
         
-        // DEBUG: Log what we got
-        gs.info('🔍 DEBUG: data is ' + (data ? 'present' : 'null/undefined'));
-        if (data) {
-            gs.info('🔍 DEBUG: data keys: ' + Object.keys(data).join(', '));
-            gs.info('🔍 DEBUG: Received: ' + JSON.stringify(data).substring(0, 300));
-        }
-        
         // Validate required fields
         if (!data || !data.username || !data.password || !data.email || !data.firstName || !data.lastName) {
-            gs.error('❌ REGISTER: Missing required fields. Got: ' + JSON.stringify(data));
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
@@ -231,6 +194,8 @@ export function registerUser(request, response) {
             }));
             return;
         }
+        
+        const role = data.role || 'citizen';
         
         // Check if user already exists
         const existing = new GlideRecord('sys_user');
@@ -269,6 +234,8 @@ export function registerUser(request, response) {
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('password', data.password); // ServiceNow handles password hashing
         newUser.setValue('active', true);
+        // Store role in a custom field (if it exists) or in a note
+        newUser.setValue('description', 'EBAKUNA_ROLE:' + role);
         
         const userId = newUser.insert();
         
@@ -306,6 +273,161 @@ export function registerUser(request, response) {
         
     } catch (error) {
         gs.error('REGISTER API: Error - ' + error.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: 'Server error: ' + error.message
+        }));
+    }
+}
+
+/**
+ * Create a new booking request
+ * @param {Object} request - REST API request
+ * @param {Object} response - REST API response
+ */
+export function createBooking(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    
+    try {
+        gs.info('📅 CREATE BOOKING - ' + new Date().toISOString());
+        
+        if (request.method === 'OPTIONS') {
+            response.setStatus(200);
+            response.getStreamWriter().writeString('{"status":"ok"}');
+            return;
+        }
+        
+        let data = parseRequestBody(request);
+        
+        // Validate required fields
+        if (!data || !data.fullName || !data.referenceNumber || !data.vaccineType || !data.preferredDate) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Missing required booking fields'
+            }));
+            return;
+        }
+        
+        // Create booking record in custom table
+        // Note: This assumes x_2009786_vaccinat_citizen_booking table exists
+        const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        booking.initialize();
+        booking.setValue('full_name', data.fullName);
+        booking.setValue('contact_no', data.contactNo || '');
+        booking.setValue('date_of_birth', data.dateOfBirth || '');
+        booking.setValue('barangay', data.barangay || '');
+        booking.setValue('vaccine_type', data.vaccineType);
+        booking.setValue('preferred_date', data.preferredDate);
+        booking.setValue('dose_number', data.doseNumber || '1');
+        booking.setValue('health_unit', data.healthUnit || '');
+        booking.setValue('reference_number', data.referenceNumber);
+        booking.setValue('status', 'pending'); // pending, approved, rejected
+        booking.setValue('created_date', new Date().toISOString());
+        
+        const bookingId = booking.insert();
+        
+        if (!bookingId) {
+            gs.error('Failed to create booking');
+            response.setStatus(500);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Failed to create booking'
+            }));
+            return;
+        }
+        
+        gs.info('✓ Booking created: ' + data.referenceNumber);
+        
+        response.setStatus(201);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            message: 'Booking created successfully',
+            referenceNumber: data.referenceNumber,
+            bookingId: bookingId
+        }));
+        
+    } catch (error) {
+        gs.error('CREATE BOOKING ERROR: ' + error.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: 'Server error: ' + error.message
+        }));
+    }
+}
+
+/**
+ * Track booking status by reference number
+ * @param {Object} request - REST API request
+ * @param {Object} response - REST API response
+ */
+export function trackBooking(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    
+    try {
+        gs.info('🔍 TRACK BOOKING - ' + new Date().toISOString());
+        
+        if (request.method === 'OPTIONS') {
+            response.setStatus(200);
+            response.getStreamWriter().writeString('{"status":"ok"}');
+            return;
+        }
+        
+        const referenceNumber = request.queryParams?.referenceNumber || request.queryParams?.ref;
+        
+        if (!referenceNumber) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Reference number is required'
+            }));
+            return;
+        }
+        
+        // Look up booking by reference number
+        const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        booking.addQuery('reference_number', referenceNumber);
+        booking.query();
+        
+        if (!booking.next()) {
+            gs.info('Booking not found: ' + referenceNumber);
+            response.setStatus(404);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Booking not found',
+                referenceNumber: referenceNumber
+            }));
+            return;
+        }
+        
+        gs.info('✓ Booking found: ' + referenceNumber);
+        
+        const bookingInfo = {
+            referenceNumber: booking.getValue('reference_number'),
+            fullName: booking.getValue('full_name'),
+            status: booking.getValue('status'),
+            vaccineType: booking.getValue('vaccine_type'),
+            preferredDate: booking.getValue('preferred_date'),
+            createdDate: booking.getValue('created_date'),
+            decisionNotes: booking.getValue('decision_notes') || ''
+        };
+        
+        response.setStatus(200);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            booking: bookingInfo
+        }));
+        
+    } catch (error) {
+        gs.error('TRACK BOOKING ERROR: ' + error.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',

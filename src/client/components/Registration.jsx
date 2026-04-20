@@ -9,7 +9,8 @@ export default function Registration({ onNavigate }) {
     email: '',
     username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'citizen'
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -86,7 +87,8 @@ export default function Registration({ onNavigate }) {
         lastName: formData.lastName,
         email: formData.email,
         username: formData.username,
-        password: formData.password
+        password: formData.password,
+        role: formData.role
       });
       
       setShowSuccess(true);
@@ -97,7 +99,8 @@ export default function Registration({ onNavigate }) {
         email: '',
         username: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: 'citizen'
       });
     } catch (err) {
       setErrors({
@@ -251,6 +254,23 @@ export default function Registration({ onNavigate }) {
                 disabled={loading}
               />
               {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="role">
+                I am a <span className="required">*</span>
+              </label>
+              <select
+                id="role"
+                name="role"
+                className="form-input"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="citizen">👤 Citizen (Book Vaccinations)</option>
+                <option value="staff">👨‍⚕️ Clinic Staff (Manage Bookings)</option>
+              </select>
             </div>
 
             <button 

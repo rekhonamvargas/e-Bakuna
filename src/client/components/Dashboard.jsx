@@ -3,12 +3,16 @@ import AppointmentManager from './AppointmentManager.jsx'
 import ClinicManager from './ClinicManager.jsx'
 import BookingManager from './BookingManager.jsx'
 import StatsCard from './StatsCard.jsx'
+import BookingPortal from './BookingPortal.jsx'
 import './Dashboard.css'
 
-export default function Dashboard({ user, authService, ebakunaService }) {
+export default function Dashboard({ user, authService, ebakunaService, onLogout }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
+  
+  // Determine user role from user data
+  const userRole = user?.description?.includes('EBAKUNA_ROLE:staff') ? 'staff' : 'citizen'
 
   useEffect(() => {
     loadDashboardStats()
@@ -159,6 +163,12 @@ export default function Dashboard({ user, authService, ebakunaService }) {
     )
   }
 
+  // Show Booking Portal for citizens
+  if (userRole === 'citizen') {
+    return <BookingPortal user={user} onLogout={onLogout} />
+  }
+
+  // Show Staff Dashboard for clinic staff
   return (
     <div className="dashboard">
       <nav className="dashboard-nav">

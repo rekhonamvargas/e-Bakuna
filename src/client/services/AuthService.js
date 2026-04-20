@@ -13,16 +13,21 @@ export class AuthService {
         password: password
       };
       
-      console.log('POST to:', `${this.authApiUrl}/login`);
-      console.log('Payload:', requestData);
+      // Send as query parameters (workaround for body parsing issue)
+      const params = new URLSearchParams();
+      params.append('username', requestData.username);
+      params.append('password', requestData.password);
       
-      const response = await fetch(`${this.authApiUrl}/login`, {
+      const url = `${this.authApiUrl}/login?${params.toString()}`;
+      console.log('POST to:', url);
+      console.log('Payload via query params:', { ...requestData, password: '***' });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        },
-        body: JSON.stringify(requestData)
+        }
       });
 
       console.log('Response status:', response.status);
@@ -66,19 +71,29 @@ export class AuthService {
         password: userData.password,
         email: userData.email.trim(),
         firstName: userData.firstName.trim(),
-        lastName: userData.lastName.trim()
+        lastName: userData.lastName.trim(),
+        role: userData.role || 'citizen'
       };
       
-      console.log('POST to:', `${this.authApiUrl}/register`);
-      console.log('Payload:', { ...requestData, password: '***' });
+      // Send as query parameters (workaround for body parsing issue)
+      const params = new URLSearchParams();
+      params.append('username', requestData.username);
+      params.append('password', requestData.password);
+      params.append('email', requestData.email);
+      params.append('firstName', requestData.firstName);
+      params.append('lastName', requestData.lastName);
+      params.append('role', requestData.role);
       
-      const response = await fetch(`${this.authApiUrl}/register`, {
+      const url = `${this.authApiUrl}/register?${params.toString()}`;
+      console.log('POST to:', url);
+      console.log('Payload via query params:', { ...requestData, password: '***' });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        },
-        body: JSON.stringify(requestData)
+        }
       });
 
       console.log('Response status:', response.status);

@@ -100,6 +100,14 @@ declare global {
                         table: 'sys_ws_version'
                         id: '40a261368fda4ef3aa7b92e2093d0509'
                     }
+                    ebakuna_booking_create_route: {
+                        table: 'sys_ws_operation'
+                        id: '7b309eec995742ddbae842bd37e6f526'
+                    }
+                    ebakuna_booking_track_route: {
+                        table: 'sys_ws_operation'
+                        id: 'f4e7844b82e54f01ac2d97a95e03c6f4'
+                    }
                     medical_citizen_create: {
                         table: 'sys_security_acl'
                         id: 'c3cc61be402740ccbdd91ea43ad199c1'
