@@ -15,6 +15,10 @@ export const x_2009786_vaccinat_citizen_booking = Table({
   name: 'x_2009786_vaccinat_citizen_booking',
   label: 'Citizen Booking',
   schema: {
+    appointment: ReferenceColumn({
+      label: 'Appointment',
+      referenceTable: 'x_2009786_vaccinat_appointment'
+    }),
     citizen_name: StringColumn({
       label: 'Citizen Name',
       maxLength: 100,
@@ -38,9 +42,22 @@ export const x_2009786_vaccinat_citizen_booking = Table({
       maxLength: 50,
       mandatory: true
     }),
+    schedule_slot: ReferenceColumn({
+      label: 'Schedule Slot',
+      referenceTable: 'x_2009786_vaccinat_clinic_schedule'
+    }),
     clinic_schedule: ReferenceColumn({
       label: 'Clinic Schedule',
-      referenceTable: 'x_2009786_vaccinat_clinic_schedule',
+      referenceTable: 'x_2009786_vaccinat_clinic_schedule'
+    }),
+    health_unit: StringColumn({
+      label: 'Health Unit',
+      maxLength: 150,
+      mandatory: true
+    }),
+    vaccine_type: StringColumn({
+      label: 'Vaccine Type',
+      maxLength: 100,
       mandatory: true
     }),
     dose_number: ChoiceColumn({
@@ -49,6 +66,20 @@ export const x_2009786_vaccinat_citizen_booking = Table({
         first: { label: 'First Dose', sequence: 0 },
         second: { label: 'Second Dose', sequence: 1 },
         booster: { label: 'Booster', sequence: 2 }
+      },
+      dropdown: 'dropdown_with_none',
+      mandatory: true
+    }),
+    preferred_time: ChoiceColumn({
+      label: 'Preferred Time',
+      choices: {
+        t_0900_am: { label: '09:00 AM', sequence: 0 },
+        t_1000_am: { label: '10:00 AM', sequence: 1 },
+        t_1100_am: { label: '11:00 AM', sequence: 2 },
+        t_1200_pm: { label: '12:00 PM', sequence: 3 },
+        t_0100_pm: { label: '01:00 PM', sequence: 4 },
+        t_0200_pm: { label: '02:00 PM', sequence: 5 },
+        t_0300_pm: { label: '03:00 PM', sequence: 6 }
       },
       dropdown: 'dropdown_with_none',
       mandatory: true

@@ -31,6 +31,52 @@ export class AuthService {
     return String(err);
   }
 
+  normalizeRole(role) {
+    const raw = (role || '').toString().trim().toLowerCase();
+    if (!raw) return '';
+    if (raw.includes('provider')) return 'provider';
+    if (raw.includes('clinic_staff') || raw.includes('staff')) return 'staff';
+    if (raw.includes('citizen')) return 'citizen';
+    return raw;
+  }
+
+  readRoleCache() {
+    try {
+      const value = localStorage.getItem('ebakuna_role_cache');
+      return value ? JSON.parse(value) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  writeRoleCache(cache) {
+    localStorage.setItem('ebakuna_role_cache', JSON.stringify(cache || {}));
+  }
+
+  cacheRoleForKeys(role, keys = []) {
+    const normalized = this.normalizeRole(role);
+    if (!normalized) return;
+
+    const cache = this.readRoleCache();
+    keys
+      .map((k) => (k || '').toString().trim().toLowerCase())
+      .filter(Boolean)
+      .forEach((k) => {
+        cache[k] = normalized;
+      });
+    this.writeRoleCache(cache);
+  }
+
+  resolveRoleFromCache(keys = []) {
+    const cache = this.readRoleCache();
+    for (const key of keys) {
+      const normalizedKey = (key || '').toString().trim().toLowerCase();
+      if (!normalizedKey) continue;
+      if (cache[normalizedKey]) return cache[normalizedKey];
+    }
+    return '';
+  }
+
   async login(username, password) {
     console.log('🔐 Logging in:', username);
     
@@ -48,8 +94,33 @@ export class AuthService {
 
       if (response.ok) {
         if (payload && payload.status === 'success' && payload.user) {
-          localStorage.setItem('ebakuna_user', JSON.stringify(payload.user));
-          return payload.user;
+          const user = payload.user;
+          const apiRole = Array.isArray(user.roles) && user.roles.length > 0
+            ? this.normalizeRole(user.roles[0])
+            : '';
+
+          const cachedRole = this.resolveRoleFromCache([
+            username,
+            user.username,
+            user.email,
+            user.sys_id
+          ]);
+
+          const effectiveRole =
+            cachedRole && apiRole === 'citizen'
+              ? cachedRole
+              : (apiRole || cachedRole || 'citizen');
+          user.roles = [effectiveRole];
+
+          this.cacheRoleForKeys(effectiveRole, [
+            username,
+            user.username,
+            user.email,
+            user.sys_id
+          ]);
+
+          localStorage.setItem('ebakuna_user', JSON.stringify(user));
+          return user;
         } else {
           const err = new Error(this.getErrorMessage(payload, 'Invalid login response'));
           err.debug = payload ? payload.debug : undefined;
@@ -163,6 +234,15 @@ export class AuthService {
         console.error('Invalid response:', responseData);
         throw new Error('Invalid registration response');
       }
+
+      const role = this.normalizeRole(userData.role || responseData.user.roles?.[0] || 'citizen');
+      responseData.user.roles = [role];
+      this.cacheRoleForKeys(role, [
+        userData.username,
+        responseData.user.username,
+        responseData.user.email,
+        responseData.user.sys_id
+      ]);
 
       console.log('✓ Registration successful:', responseData.user);
       return responseData.user;

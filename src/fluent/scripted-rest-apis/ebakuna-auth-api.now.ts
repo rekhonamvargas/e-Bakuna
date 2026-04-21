@@ -1,6 +1,6 @@
 ﻿import '@servicenow/sdk/global'
 import { RestApi } from '@servicenow/sdk/core'
-import { authenticateUser, registerUser, createBooking, trackBooking, getDashboardStats } from '../../server/auth-handler.js'
+import { authenticateUser, registerUser, createBooking, trackBooking, getDashboardStats, resetAppUsers, reviewBookingDecision } from '../../server/auth-handler.js'
 
 /**
  * Scripted REST API for eBakuna Authentication
@@ -87,9 +87,39 @@ RestApi({
             $id: Now.ID['ebakuna_booking_track_route'],
             name: 'Track',
             path: '/track',
-            method: 'GET',
+            method: 'POST',
             script: trackBooking,
             short_description: 'Track booking status by reference number',
+            version: 1,
+            consumes: 'application/json',
+            produces: 'application/json',
+            authentication: false,
+            authorization: false,
+            internalRole: false,
+            enforce_acl: []
+        },
+        {
+            $id: Now.ID['ebakuna_booking_review_route'],
+            name: 'ReviewBooking',
+            path: '/review-booking',
+            method: 'POST',
+            script: reviewBookingDecision,
+            short_description: 'Approve or reject citizen booking requests',
+            version: 1,
+            consumes: 'application/json',
+            produces: 'application/json',
+            authentication: false,
+            authorization: false,
+            internalRole: false,
+            enforce_acl: []
+        },
+        {
+            $id: Now.ID['ebakuna_reset_users_route'],
+            name: 'ResetUsers',
+            path: '/reset-users',
+            method: 'POST',
+            script: resetAppUsers,
+            short_description: 'Delete all app users and app credential records',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',

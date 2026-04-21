@@ -146,6 +146,46 @@ function parseRequestBody(request) {
     }
 }
 
+function normalizeRoleValue(rawRole) {
+    const value = (rawRole || '').toString().trim().toLowerCase();
+    if (!value) return '';
+    if (value.indexOf('provider') >= 0) return 'provider';
+    if (value.indexOf('clinic_staff') >= 0 || value.indexOf('staff') >= 0) return 'staff';
+    if (value.indexOf('citizen') >= 0) return 'citizen';
+    return value;
+}
+
+function extractRoleFromDescription(description) {
+    const text = (description || '').toString();
+    if (!text) return '';
+
+    const roleTagMatch = text.match(/role\s*:\s*([a-z_]+)/i);
+    if (roleTagMatch && roleTagMatch[1]) {
+        return normalizeRoleValue(roleTagMatch[1]);
+    }
+
+    return normalizeRoleValue(text);
+}
+
+function extractRoleFromUserRecord(userRecord) {
+    if (!userRecord) return 'citizen';
+
+    const descriptionRole = extractRoleFromDescription(userRecord.getValue('description') || '');
+    if (descriptionRole) return descriptionRole;
+
+    const titleRole = extractRoleFromDescription(userRecord.getValue('title') || '');
+    if (titleRole) return titleRole;
+
+    const departmentRole = extractRoleFromDescription(userRecord.getValue('department') || '');
+    if (departmentRole) return departmentRole;
+
+    return 'citizen';
+}
+
+function buildRoleMarker(role) {
+    return 'ROLE:' + normalizeRoleValue(role || 'citizen');
+}
+
 /**
  * TEMPORARY CLEANUP - delete all app users with credentials.
  * This is intentionally scoped to users that have records in the app credential table.
@@ -159,14 +199,17 @@ export function resetAppUsers(request, response) {
 
         const credentialIds = [];
         const userIds = [];
+        const usernames = [];
 
         const creds = new GlideRecord('x_2009786_vaccinat_user_credential');
         creds.query();
         while (creds.next()) {
             const credId = creds.getUniqueValue();
             const userId = creds.getValue('user');
+            const username = creds.getValue('username');
             credentialIds.push(credId);
             if (userId) userIds.push(userId.toString());
+            if (username) usernames.push(username.toString());
         }
 
         let deletedCreds = 0;
@@ -183,6 +226,26 @@ export function resetAppUsers(request, response) {
             if (user.get(userIds[j])) {
                 if (user.deleteRecord()) deletedUsers++;
             }
+        }
+
+        // Fallback 1: delete users referenced by username from credential rows.
+        for (let k = 0; k < usernames.length; k++) {
+            const uname = usernames[k];
+            if (!uname) continue;
+            const userByName = new GlideRecord('sys_user');
+            userByName.addQuery('user_name', uname);
+            userByName.query();
+            while (userByName.next()) {
+                if (userByName.deleteRecord()) deletedUsers++;
+            }
+        }
+
+        // Fallback 2: delete any app-created users marked with ROLE:* metadata.
+        const taggedUsers = new GlideRecord('sys_user');
+        taggedUsers.addEncodedQuery('descriptionSTARTSWITHROLE:^ORtitleSTARTSWITHROLE:');
+        taggedUsers.query();
+        while (taggedUsers.next()) {
+            if (taggedUsers.deleteRecord()) deletedUsers++;
         }
 
         gs.warn('RESET APP USERS DONE: creds=' + deletedCreds + ', users=' + deletedUsers);
@@ -350,11 +413,7 @@ export function authenticateUser(request, response) {
         gs.info('✓ LOGIN SUCCESS for ' + username);
         
         // Get role from description
-        const description = user.getValue('description') || '';
-        let role = 'citizen';
-        if (description && description.indexOf('ROLE:') === 0) {
-            role = description.substring(5).trim();
-        }
+        const role = extractRoleFromUserRecord(user);
         
         response.setStatus(200);
         response.getStreamWriter().writeString(JSON.stringify({
@@ -402,7 +461,8 @@ export function registerUser(request, response) {
             return;
         }
         
-        const role = data.role || 'citizen';
+        const role = normalizeRoleValue(data.role) || 'citizen';
+        const roleMarker = buildRoleMarker(role);
         gs.info('USERNAME: [' + data.username + ']');
         gs.info('PASSWORD LENGTH: ' + data.password.length);
         gs.info('EMAIL: [' + data.email + ']');
@@ -434,7 +494,8 @@ export function registerUser(request, response) {
             existing.setValue('last_name', data.lastName);
             existing.setValue('email', data.email);
             existing.setValue('active', true);
-            existing.setValue('description', 'ROLE:' + role);
+            existing.setValue('description', roleMarker);
+            existing.setValue('title', roleMarker);
             existing.update();
 
             // Deactivate any existing credential records
@@ -494,7 +555,8 @@ export function registerUser(request, response) {
         newUser.setValue('first_name', data.firstName);
         newUser.setValue('last_name', data.lastName);
         newUser.setValue('active', true);
-        newUser.setValue('description', 'ROLE:' + role);
+        newUser.setValue('description', roleMarker);
+        newUser.setValue('title', roleMarker);
         
         const userId = newUser.insert();
         gs.info('USER CREATED: ID=' + userId);
@@ -580,11 +642,71 @@ export function createBooking(request, response) {
     try {
         const data = parseRequestBody(request);
         
-        if (!data || !data.userId || !data.fullName || !data.contactNo || !data.dateOfBirth || !data.barangay || !data.vaccineType || !data.preferredDate) {
+        if (!data || !data.userId || !data.fullName || !data.contactNo || !data.dateOfBirth || !data.barangay || !data.vaccineType || !data.preferredDate || !data.preferredTime) {
             response.setStatus(400);
             response.getStreamWriter().writeString(JSON.stringify({
                 status: 'error',
                 error: 'Missing required booking fields'
+            }));
+            return;
+        }
+
+        const preferredDate = data.preferredDate.toString();
+
+        const normalizePreferredTime = (raw) => {
+            const value = (raw || '').toString().trim();
+            if (!value) return '';
+            if (value.indexOf('t_') === 0) return value;
+
+            const labelToValue = {
+                '09:00 AM': 't_0900_am',
+                '10:00 AM': 't_1000_am',
+                '11:00 AM': 't_1100_am',
+                '12:00 PM': 't_1200_pm',
+                '01:00 PM': 't_0100_pm',
+                '02:00 PM': 't_0200_pm',
+                '03:00 PM': 't_0300_pm'
+            };
+            return labelToValue[value] || value;
+        };
+
+        const preferredTime = normalizePreferredTime(data.preferredTime);
+        const healthUnit = (data.healthUnit || '').toString();
+        const effectiveHealthUnit = healthUnit || 'Cebu City Health Office (CHO)';
+
+        const normalizeDoseNumber = (raw) => {
+            const value = (raw || '').toString().trim();
+            if (!value) return 'first';
+            const lowered = value.toLowerCase();
+            if (lowered === 'first' || lowered === 'second' || lowered === 'booster') return lowered;
+            if (lowered.indexOf('booster') >= 0) return 'booster';
+            if (lowered.indexOf('2') >= 0 || lowered.indexOf('second') >= 0) return 'second';
+            return 'first';
+        };
+
+        if (!preferredTime) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Missing preferredTime'
+            }));
+            return;
+        }
+
+        // Prevent double booking of the same date+time slot within the same health unit.
+        // This is intentionally simple and deterministic for the citizen UX.
+        const existing = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        existing.addQuery('health_unit', effectiveHealthUnit);
+        existing.addQuery('first_dose_date', preferredDate);
+        existing.addQuery('preferred_time', preferredTime);
+        // Block if the slot is already claimed (pending) or approved (confirmed).
+        existing.addQuery('booking_status', 'IN', 'pending,confirmed');
+        existing.query();
+        if (existing.next()) {
+            response.setStatus(409);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Selected time slot is already booked. Please choose a different time.'
             }));
             return;
         }
@@ -597,18 +719,19 @@ export function createBooking(request, response) {
         booking.setValue('date_of_birth', data.dateOfBirth);
         booking.setValue('contact_number', data.contactNo);
         booking.setValue('barangay', data.barangay);
-        booking.setValue('dose_number', data.doseNumber || 'first');
+        booking.setValue('health_unit', effectiveHealthUnit);
+        booking.setValue('vaccine_type', (data.vaccineType || '').toString());
+        booking.setValue('dose_number', normalizeDoseNumber(data.doseNumber));
         booking.setValue('booking_reference', refNumber);
         booking.setValue('booking_status', 'pending');
+        booking.setValue('preferred_time', preferredTime);
         if (data.specialRequirements) {
             booking.setValue('special_requirements', data.specialRequirements);
         }
         if (data.clinicSchedule) {
             booking.setValue('clinic_schedule', data.clinicSchedule);
         }
-        if (data.preferredDate) {
-            booking.setValue('first_dose_date', data.preferredDate);
-        }
+        booking.setValue('first_dose_date', preferredDate);
         
         const bookingId = booking.insert();
         
@@ -618,12 +741,88 @@ export function createBooking(request, response) {
             booking: {
                 referenceNumber: refNumber,
                 reference_number: refNumber,
-                booking_id: bookingId
+                booking_id: bookingId,
+                preferred_date: preferredDate,
+                preferred_time: preferredTime
             }
         }));
         
     } catch (e) {
         gs.error('CREATE BOOKING ERROR: ' + e.message);
+        response.setStatus(500);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'error',
+            error: e.message
+        }));
+    }
+}
+
+/**
+ * REVIEW BOOKING (Staff approve/reject)
+ */
+export function reviewBookingDecision(request, response) {
+    response.setContentType('application/json');
+    response.setHeader('Access-Control-Allow-Origin', '*');
+
+    try {
+        const data = parseRequestBody(request);
+        const bookingSysId = (data && (data.bookingSysId || data.booking_id || data.sys_id)) || '';
+        const nextStatus = ((data && data.status) || '').toString().trim().toLowerCase();
+
+        if (!bookingSysId || !nextStatus) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Missing bookingSysId or status'
+            }));
+            return;
+        }
+
+        const allowed = nextStatus === 'confirmed' || nextStatus === 'cancelled';
+        if (!allowed) {
+            response.setStatus(400);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Invalid status. Allowed values: confirmed, cancelled'
+            }));
+            return;
+        }
+
+        const booking = new GlideRecord('x_2009786_vaccinat_citizen_booking');
+        if (!booking.get(bookingSysId.toString())) {
+            response.setStatus(404);
+            response.getStreamWriter().writeString(JSON.stringify({
+                status: 'error',
+                error: 'Booking not found'
+            }));
+            return;
+        }
+
+        booking.setValue('booking_status', nextStatus);
+
+        if (data && data.assignedDate) {
+            booking.setValue('first_dose_date', data.assignedDate);
+        }
+
+        if (data && data.clinicSchedule) {
+            booking.setValue('clinic_schedule', data.clinicSchedule);
+        }
+
+        booking.update();
+
+        response.setStatus(200);
+        response.getStreamWriter().writeString(JSON.stringify({
+            status: 'success',
+            booking: {
+                sys_id: booking.getUniqueValue(),
+                booking_reference: booking.getValue('booking_reference'),
+                booking_status: booking.getValue('booking_status'),
+                first_dose_date: booking.getValue('first_dose_date'),
+                clinic_schedule: booking.getValue('clinic_schedule')
+            }
+        }));
+    } catch (e) {
+        gs.error('REVIEW BOOKING ERROR: ' + e.message);
         response.setStatus(500);
         response.getStreamWriter().writeString(JSON.stringify({
             status: 'error',
@@ -673,10 +872,13 @@ export function trackBooking(request, response) {
                 citizen_name: booking.getValue('citizen_name'),
                 contact_number: booking.getValue('contact_number'),
                 barangay: booking.getValue('barangay'),
+                vaccine_type: booking.getValue('vaccine_type'),
                 dose_number: booking.getValue('dose_number'),
                 booking_status: booking.getValue('booking_status'),
+                health_unit: booking.getValue('health_unit'),
                 clinic_schedule: booking.getValue('clinic_schedule'),
-                first_dose_date: booking.getValue('first_dose_date')
+                first_dose_date: booking.getValue('first_dose_date'),
+                preferred_time: booking.getValue('preferred_time')
             }
         }));
         

@@ -9,7 +9,7 @@ import ebakunaPage from '../../client/ebakuna.html'
 export const ebakuna_dashboard = UiPage({
   $id: Now.ID['ebakuna_dashboard'],
   endpoint: 'x_2009786_vaccinat_ebakuna.do',
-  description: 'E-Bakuna Vaccination Management Dashboard - Complete COVID-19 vaccination system for Cebu City Health Office',
+  description: 'E-Bakuna - Vaccination system for Cebu City Health Office',
   category: 'general',
   html: ebakunaPage,
   direct: true

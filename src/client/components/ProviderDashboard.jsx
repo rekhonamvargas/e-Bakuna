@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { EBakunaService } from '../services/EBakunaService.js';
-import './StaffDashboard.css';
+import './ProviderDashboard.css';
 
 export default function ProviderDashboard({ user, onLogout, hideLogout = false, hideHeader = false }) {
   const normalizedRoles = Array.isArray(user?.roles)
@@ -11,7 +11,7 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
 
   if (user && !isProvider) {
     return (
-      <div className="staff-dashboard" style={{ padding: '40px' }}>
+      <div className="provider-dashboard" style={{ padding: '40px' }}>
         <div className="error-box">Access denied: Provider dashboard only.</div>
       </div>
     );
@@ -56,6 +56,75 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
     return field || '';
   };
 
+  const extractDate = (record) => {
+    return (
+      extractValue(record.preferred_date) ||
+      extractValue(record.appointment_date) ||
+      extractValue(record.clinic_schedule_date) ||
+      ''
+    );
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return '--';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return dateValue;
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const dayLabel = (date) =>
+    date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+  const vaccineTotals = ['COVID-19', 'Flu', 'Hepatitis B', 'Pneumo', 'MMR'].map((name) => {
+    const count = bookings.filter((booking) => {
+      const vaccine = extractValue(booking.vaccine_type).toString().toLowerCase();
+      return vaccine.includes(name.toLowerCase());
+    }).length;
+    return { name, count };
+  });
+
+  const totalBookings = bookings.length;
+  const vaccinated = bookings.filter((booking) => {
+    const status = extractValue(booking.booking_status).toString().toLowerCase();
+    return status.includes('approved') || status.includes('completed') || status.includes('vaccinated');
+  }).length;
+  const pendingReview = bookings.filter((booking) => {
+    const status = extractValue(booking.booking_status).toString().toLowerCase();
+    return status.includes('pending') || status.includes('review');
+  }).length;
+
+  const next7DayOffsets = Array.from({ length: 7 }, (_, index) => index);
+
+  const buildDateFromOffset = (offset = 0) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date;
+  };
+
+  const slotsByDate = schedules.reduce((acc, schedule) => {
+    const raw =
+      extractValue(schedule.schedule_date) ||
+      extractValue(schedule.date) ||
+      extractValue(schedule.clinic_date) ||
+      extractValue(schedule.available_date);
+    if (!raw) return acc;
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return acc;
+    const key = date.toISOString().slice(0, 10);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const maxVaccineCount = Math.max(...vaccineTotals.map((item) => item.count), 1);
+
+  const bookingRows = bookings.slice(0, 6);
+
+  const providerName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || 'Provider';
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -66,144 +135,137 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
   }
 
   return (
-    <div className="staff-dashboard">
-      {!hideHeader && (
-        <nav className="navbar">
-          <div className="container">
-            <div className="navbar-content">
-              <div className="navbar-brand">E-Bakuna - Provider Portal</div>
-              <div className="navbar-actions">
-                <span className="user-name">
-                  {user.first_name} {user.last_name}
-                </span>
-                {!hideLogout && (
-                  <button className="btn-logout" onClick={onLogout}>
-                    Logout
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </nav>
-      )}
-
-      <div className="container">
-        <section className="role-overview provider-overview">
-          <div className="role-overview-copy">
-            <span className="role-overview-kicker">Provider Dashboard</span>
-            <h2>Oversee the whole vaccination operation</h2>
-            <p>
-              Hospitals, RHUs, CHOs, and private clinics use this view to manage clinics, set schedules, and monitor
-              booking records across the system.
-            </p>
-          </div>
-          <div className="role-overview-grid">
-            <div className="role-card">
-              <strong>Manage clinics</strong>
-              <span>Keep locations, contact details, and operating hours up to date.</span>
-            </div>
-            <div className="role-card">
-              <strong>Set schedules</strong>
-              <span>Create and maintain vaccination availability for each clinic.</span>
-            </div>
-            <div className="role-card">
-              <strong>Oversee bookings</strong>
-              <span>Review booking volume and track approved or pending requests.</span>
-            </div>
-          </div>
-        </section>
-
-        <div className="summary-section">
-          <h2 className="section-title">Provider Overview</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">🏥</div>
-              <div className="stat-value">{clinics.length}</div>
-              <div className="stat-label">Clinics</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📅</div>
-              <div className="stat-value">{schedules.length}</div>
-              <div className="stat-label">Schedules</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📝</div>
-              <div className="stat-value">{bookings.length}</div>
-              <div className="stat-label">Booking Records</div>
-            </div>
+    <div className="provider-dashboard">
+      <header className="provider-topbar">
+        <div className="provider-brand">
+          <span className="provider-logo">+</span>
+          <div>
+            <h1>Cebu City Health Office</h1>
+            <p>Provider Dashboard · Vaccination Management System</p>
           </div>
         </div>
+        <div className="provider-topbar-actions">
+          <span className="provider-chip">CHO · Cebu</span>
+          {!hideLogout && (
+            <button className="provider-logout" onClick={onLogout}>Logout</button>
+          )}
+        </div>
+      </header>
 
-        <div className="appointments-section">
-          <div className="card">
-            <div className="section-header">
-              <h2>Booking Records</h2>
-              <p>Provider oversight for all pending, approved, and cancelled bookings.</p>
-            </div>
-            <div className="table-container">
-              {bookings.length === 0 ? (
-                <div className="empty-state">
-                  <p>No booking records found.</p>
+      <section className="provider-kpi-grid">
+        <article className="provider-kpi-card">
+          <strong>{totalBookings.toLocaleString()}</strong>
+          <span>Total Bookings</span>
+        </article>
+        <article className="provider-kpi-card">
+          <strong>{vaccinated.toLocaleString()}</strong>
+          <span>Vaccinated</span>
+        </article>
+        <article className="provider-kpi-card">
+          <strong>{pendingReview.toLocaleString()}</strong>
+          <span>Pending Review</span>
+        </article>
+        <article className="provider-kpi-card">
+          <strong>{schedules.length.toLocaleString()}</strong>
+          <span>Active Schedules</span>
+        </article>
+      </section>
+
+      <section className="provider-main-grid">
+        <div className="provider-panel">
+          <div className="provider-panel-title-row">
+            <h2>Schedule Management</h2>
+            {!hideHeader && <span className="provider-user-name">{providerName}</span>}
+          </div>
+          <div className="provider-days-grid">
+            {next7DayOffsets.map((offset) => {
+              const date = buildDateFromOffset(offset);
+              const key = date.toISOString().slice(0, 10);
+              const slots = slotsByDate[key] || 0;
+              return (
+                <div key={key} className={`provider-day-card ${slots > 0 ? 'active' : ''}`}>
+                  <small>{dayLabel(date)}</small>
+                  <strong>{date.getDate()}</strong>
+                  <span>{slots > 0 ? `${slots} slots` : 'Closed'}</span>
                 </div>
-              ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Reference #</th>
-                      <th>Citizen</th>
-                      <th>Barangay</th>
-                      <th>Vaccine</th>
-                      <th>Status</th>
-                      <th>Schedule</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr key={booking.sys_id}>
-                        <td className="reference-cell">{extractValue(booking.booking_reference)}</td>
-                        <td>{extractValue(booking.citizen_name)}</td>
-                        <td>{extractValue(booking.barangay)}</td>
-                        <td>{extractValue(booking.vaccine_type) || 'N/A'}</td>
-                        <td>{extractValue(booking.booking_status)}</td>
-                        <td>{extractValue(booking.clinic_schedule) || 'Unassigned'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+              );
+            })}
+          </div>
+          <div className="provider-tags-row">
+            {vaccineTotals.map((item) => (
+              <span key={item.name} className="provider-tag">{item.name}</span>
+            ))}
           </div>
         </div>
 
-        <div className="appointments-section">
-          <div className="card">
-            <div className="section-header">
-              <h2>Clinics and Schedules</h2>
-              <p>Manage facilities, operating hours, and vaccination schedules.</p>
-            </div>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Clinic</th>
-                    <th>Barangay</th>
-                    <th>Schedules</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clinics.map((clinic) => (
-                    <tr key={clinic.sys_id}>
-                      <td>{extractValue(clinic.name)}</td>
-                      <td>{extractValue(clinic.barangay)}</td>
-                      <td>{schedules.length}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        <div className="provider-panel">
+          <h2>Bookings by Vaccine</h2>
+          <div className="provider-vaccine-list">
+            {vaccineTotals.map((item) => (
+              <div key={item.name} className="provider-vaccine-row">
+                <span>{item.name}</span>
+                <div className="provider-vaccine-bar-track">
+                  <div
+                    className="provider-vaccine-bar-fill"
+                    style={{ width: `${(item.count / maxVaccineCount) * 100}%` }}
+                  />
+                </div>
+                <strong>{item.count}</strong>
+              </div>
+            ))}
           </div>
+
+          <h3>Notifications</h3>
+          <ul className="provider-notifications">
+            <li>{pendingReview} pending bookings require staff review.</li>
+            <li>{clinics.length} clinics are currently active in this account.</li>
+            <li>{schedules.length} schedules are visible in the next service window.</li>
+          </ul>
         </div>
-      </div>
+      </section>
+
+      <section className="provider-table-panel">
+        <div className="provider-panel-title-row">
+          <h2>All Booking Records</h2>
+        </div>
+        <div className="provider-table-wrap">
+          {bookingRows.length === 0 ? (
+            <p className="provider-empty">No booking records found.</p>
+          ) : (
+            <table className="provider-table">
+              <thead>
+                <tr>
+                  <th>Reference No.</th>
+                  <th>Citizen</th>
+                  <th>Vaccine</th>
+                  <th>Preferred Date</th>
+                  <th>Assigned Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookingRows.map((booking) => {
+                  const status = extractValue(booking.booking_status) || 'Pending';
+                  return (
+                    <tr key={booking.sys_id}>
+                      <td className="reference-cell">{extractValue(booking.booking_reference) || '--'}</td>
+                      <td>{extractValue(booking.citizen_name) || '--'}</td>
+                      <td>{extractValue(booking.vaccine_type) || 'N/A'}</td>
+                      <td>{formatDate(extractDate(booking))}</td>
+                      <td>{formatDate(extractValue(booking.assigned_date) || extractValue(booking.clinic_schedule))}</td>
+                      <td>
+                        <span className={`provider-status ${status.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

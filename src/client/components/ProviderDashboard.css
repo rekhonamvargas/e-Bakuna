@@ -1,0 +1,377 @@
+.provider-dashboard {
+  min-height: 100vh;
+  background: #f6f4f4;
+  color: #6b1111;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.provider-topbar {
+  background: linear-gradient(90deg, #9f060f 0%, #cc1f1f 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 28px;
+}
+
+.provider-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.provider-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.provider-brand h1 {
+  margin: 0;
+  font-size: 33px;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.provider-brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+.provider-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.provider-chip {
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.provider-logout {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: transparent;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.provider-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #eec9cc;
+  border-bottom: 1px solid #eec9cc;
+  background: #fff;
+}
+
+.provider-kpi-card {
+  padding: 20px;
+  text-align: center;
+  border-right: 1px solid #efcfd1;
+}
+
+.provider-kpi-card:last-child {
+  border-right: none;
+}
+
+.provider-kpi-card strong {
+  display: block;
+  font-size: 40px;
+  line-height: 1;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #c41d1d;
+}
+
+.provider-kpi-card span {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.provider-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid #efcccf;
+}
+
+.provider-panel {
+  background: #f7f2f2;
+  border-right: 1px solid #efcccf;
+  padding: 18px 22px;
+}
+
+.provider-panel:last-child {
+  border-right: none;
+}
+
+.provider-panel h2 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #8b1616;
+}
+
+.provider-panel h3 {
+  margin: 22px 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b05155;
+}
+
+.provider-panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.provider-user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a73f3f;
+}
+
+.provider-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.provider-day-card {
+  background: #f8e7e8;
+  border: 1px solid #e7bcc1;
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.provider-day-card.active {
+  background: #cf2027;
+  color: #fff;
+  border-color: #cf2027;
+}
+
+.provider-day-card small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.provider-day-card strong {
+  display: block;
+  font-size: 30px;
+  line-height: 1;
+  margin: 5px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.provider-day-card span {
+  font-size: 11px;
+}
+
+.provider-tags-row {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.provider-tag {
+  border: 1px solid #e9b7bc;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #fff7f7;
+}
+
+.provider-vaccine-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.provider-vaccine-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.provider-vaccine-bar-track {
+  height: 12px;
+  background: #efdfe1;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.provider-vaccine-bar-fill {
+  height: 100%;
+  background: #c61d26;
+  border-radius: 999px;
+}
+
+.provider-vaccine-row strong {
+  text-align: right;
+  color: #bf2024;
+}
+
+.provider-notifications {
+  margin: 0;
+  padding-left: 18px;
+  color: #853034;
+}
+
+.provider-notifications li {
+  margin-bottom: 8px;
+}
+
+.provider-table-panel {
+  padding: 16px 22px 28px;
+  background: #f8f2f2;
+}
+
+.provider-table-wrap {
+  overflow-x: auto;
+}
+
+.provider-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.provider-table th,
+.provider-table td {
+  border-bottom: 1px solid #edd2d4;
+  padding: 12px 8px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.provider-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #b1575c;
+  font-size: 11px;
+}
+
+.reference-cell {
+  color: #bb2529;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.provider-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.provider-status.approved,
+.provider-status.completed,
+.provider-status.vaccinated {
+  background: #dff5e4;
+  color: #167244;
+}
+
+.provider-status.pending,
+.provider-status.pending-review,
+.provider-status.review {
+  background: #fff3d4;
+  color: #9f6400;
+}
+
+.provider-status.rejected,
+.provider-status.cancelled,
+.provider-status.canceled {
+  background: #fde0e0;
+  color: #9f1f2f;
+}
+
+.provider-empty {
+  color: #8a4f52;
+  margin: 8px 0;
+}
+
+@media (max-width: 1200px) {
+  .provider-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-panel {
+    border-right: none;
+    border-bottom: 1px solid #efcccf;
+  }
+}
+
+@media (max-width: 900px) {
+  .provider-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .provider-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .provider-kpi-card:nth-child(2n) {
+    border-right: none;
+  }
+
+  .provider-days-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .provider-vaccine-row {
+    grid-template-columns: 110px 1fr 34px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .provider-brand h1 {
+    font-size: 24px;
+  }
+
+  .provider-panel h2 {
+    font-size: 24px;
+  }
+
+  .provider-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-kpi-card {
+    border-right: none;
+    border-bottom: 1px solid #efcfd1;
+  }
+
+  .provider-kpi-card:last-child {
+    border-bottom: none;
+  }
+
+  .provider-days-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -12,7 +12,8 @@
     "noUnusedLocals": false
   },
   "include": [
-    "./**/*.ts"
+    "./**/*.ts",
+    "./**/*.js"
   ],
   "exclude": [
     "**/*.now.ts"

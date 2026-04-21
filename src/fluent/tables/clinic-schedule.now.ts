@@ -1,10 +1,10 @@
 import '@servicenow/sdk/global'
 import { 
   Table, 
-  StringColumn, 
-  DateColumn, 
+  DateTimeColumn,
   IntegerColumn,
-  ReferenceColumn
+  ReferenceColumn,
+  ChoiceColumn
 } from '@servicenow/sdk/core'
 
 /**
@@ -12,52 +12,59 @@ import {
  */
 export const x_2009786_vaccinat_clinic_schedule = Table({
   name: 'x_2009786_vaccinat_clinic_schedule',
-  label: 'Clinic Schedule',
+  label: 'Schedule',
   schema: {
     clinic: ReferenceColumn({
       label: 'Clinic',
       referenceTable: 'x_2009786_vaccinat_clinic',
       mandatory: true
     }),
-    schedule_date: DateColumn({
-      label: 'Schedule Date',
+    start_date_time: DateTimeColumn({
+      label: 'Start Date/Time',
       mandatory: true
     }),
-    start_time: StringColumn({
-      label: 'Start Time',
-      maxLength: 10,
-      default: '08:00',
+    end_date_time: DateTimeColumn({
+      label: 'End Date/Time',
       mandatory: true
     }),
-    end_time: StringColumn({
-      label: 'End Time',
-      maxLength: 10,
-      default: '17:00', 
-      mandatory: true
-    }),
-    total_slots: IntegerColumn({
-      label: 'Total Available Slots',
+    max_capacity: IntegerColumn({
+      label: 'Max Capacity',
       mandatory: true,
       min: 1,
-      max: 500
+      max: 2000
     }),
-    booked_slots: IntegerColumn({
-      label: 'Booked Slots',
-      default: 0,
-      read_only: true
+    remaining_slots: IntegerColumn({
+      label: 'Remaining Slots',
+      mandatory: true,
+      min: 0,
+      max: 2000
     }),
-    available_slots: IntegerColumn({
-      label: 'Available Slots',
-      read_only: true,
-      function_definition: 'glidefunction:subtract(total_slots, booked_slots)'
+    vaccine_brand: ChoiceColumn({
+      label: 'Vaccine Brand',
+      choices: {
+        pfizer: { label: 'Pfizer', sequence: 0 },
+        moderna: { label: 'Moderna', sequence: 1 },
+        astrazeneca: { label: 'AstraZeneca', sequence: 2 },
+        sinovac: { label: 'Sinovac', sequence: 3 },
+        sinopharm: { label: 'Sinopharm', sequence: 4 },
+        johnson_johnson: { label: 'Johnson & Johnson', sequence: 5 },
+        novavax: { label: 'Novavax', sequence: 6 },
+        sputnik: { label: 'Sputnik', sequence: 7 },
+        covaxin: { label: 'Covaxin', sequence: 8 }
+      },
+      dropdown: 'dropdown_with_none',
+      mandatory: true
     }),
-    barangay: StringColumn({
-      label: 'Barangay Coverage',
-      maxLength: 100
-    }),
-    notes: StringColumn({
-      label: 'Schedule Notes',
-      maxLength: 500
+    status: ChoiceColumn({
+      label: 'Status',
+      choices: {
+        open: { label: 'Open', sequence: 0 },
+        full: { label: 'Full', sequence: 1 },
+        cancelled: { label: 'Cancelled', sequence: 2 }
+      },
+      dropdown: 'dropdown_with_none',
+      default: 'open',
+      mandatory: true
     })
   },
   allow_web_service_access: true,

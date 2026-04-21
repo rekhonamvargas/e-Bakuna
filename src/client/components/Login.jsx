@@ -1,12 +1,78 @@
-import React, { useState } from 'react'
-import './Login.css'
+import React, { useState, useCallback } from 'react'
 import { AuthService } from '../services/AuthService.js'
+import styles from './Login.module.css'
+
+function Field({ id, label, icon, type = 'text', value, onChange, placeholder, autoComplete }) {
+  const [focused, setFocused] = useState(false)
+  const [showPw, setShowPw] = useState(false)
+
+  const isPassword = type === 'password'
+  const inputType = isPassword ? (showPw ? 'text' : 'password') : type
+
+  return (
+    <div className={styles.fieldGroup}>
+      <label htmlFor={id} className={styles.label}>{label}</label>
+
+      <div className={styles.inputWrap}>
+        <span className={styles.inputIcon}>{icon}</span>
+
+        <input
+          id={id}
+          name={id}
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className={`${styles.input} ${focused ? styles.focused : ''}`}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required
+        />
+
+        {isPassword && (
+          <button
+            type="button"
+            className={styles.showToggle}
+            onClick={() => setShowPw(v => !v)}
+          >
+            {showPw ? 'HIDE' : 'SHOW'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ErrorBanner({ message }) {
+  if (!message) return null
+  return (
+    <div className={styles.error}>
+      <span>⚠</span>
+      <span>{message}</span>
+    </div>
+  )
+}
+
+function DebugPanel({ info }) {
+  if (!info) return null
+  return (
+    <pre className={styles.debug}>
+      {JSON.stringify(info, null, 2)}
+    </pre>
+  )
+}
 
 export default function Login({ onLogin, onNavigate }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [debugInfo, setDebugInfo] = useState(null)
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target
+    setCredentials(prev => ({ ...prev, [name]: value }))
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -15,99 +81,78 @@ export default function Login({ onLogin, onNavigate }) {
     setLoading(true)
 
     try {
-      const authService = new AuthService()
-      console.log('🔐 Attempting login with:', credentials.username)
-      
-      const user = await authService.login(credentials.username, credentials.password)
-      console.log('✓ Login successful:', user)
-      
-      // Call parent handler to update app state
+      const user = await new AuthService().login(
+        credentials.username,
+        credentials.password
+      )
       onLogin(user)
-    } catch (error) {
-      console.error('❌ Login error:', error)
-      setError(error.message || 'Login failed')
-      if (error.debug) {
-        setDebugInfo(error.debug)
-      }
+    } catch (err) {
+      setError(err.message || 'Login failed.')
+      if (err.debug) setDebugInfo(err.debug)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value
-    })
-  }
-
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h2>🔐 Login</h2>
-          <p>Sign in to access the E-Bakuna system</p>
-        </div>
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <div className={styles.stripe} />
 
-        <form onSubmit={handleSubmit} className="login-form">
-          {error && <p className="error-message">{error}</p>}
-          {debugInfo && (
-            <pre className="debug-info">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          )}
-          <div className="form-group">
-            <label htmlFor="username">Email / Username</label>
-            <input
-              type="email"
+        <div className={styles.body}>
+          <div className={styles.header}>
+            <div className={styles.logo}>
+              <div className={styles.logoIcon}>✚</div>
+              <div>
+                <div className={styles.logoText}>E-Bakuna</div>
+                <div className={styles.logoSub}>Vaccination System</div>
+              </div>
+            </div>
+
+            <h2 className={styles.title}>Welcome back</h2>
+            <p className={styles.subtitle}>Sign in to access your dashboard</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <ErrorBanner message={error} />
+            <DebugPanel info={debugInfo} />
+
+            <Field
               id="username"
-              name="username"
+              label="Email / Username"
+              icon="✉"
               value={credentials.username}
               onChange={handleChange}
-              className="form-input"
-              placeholder="Enter your email or username"
-              required
+              placeholder="you@example.com"
+              autoComplete="username"
             />
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
+            <Field
               id="password"
-              name="password"
+              label="Password"
+              icon="🔒"
+              type="password"
               value={credentials.password}
               onChange={handleChange}
-              className="form-input"
               placeholder="Enter your password"
-              required
+              autoComplete="current-password"
             />
-          </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary login-btn"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <span className="loading-spinner small"></span>
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={loading}
+            >
+              {loading ? <><div className={styles.spinner}/>Signing in…</> : 'Sign In'}
+            </button>
+          </form>
 
-        <div className="login-footer">
-          <div className="register-link-section">
-            <p className="register-text">
+          <div className={styles.footer}>
+            <p>
               Don't have an account?{' '}
               <button
-                type="button"
-                className="register-link"
-                onClick={() => onNavigate && onNavigate('register')}
+                className={styles.registerBtn}
+                onClick={() => onNavigate?.('register')}
               >
                 Create one here
               </button>

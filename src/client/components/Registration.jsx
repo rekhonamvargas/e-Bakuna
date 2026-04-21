@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AuthService } from '../services/AuthService.js';
 import './Registration.css';
 
-export default function Registration({ onNavigate }) {
+export default function Registration({ onNavigate, onLogin }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -75,13 +75,23 @@ export default function Registration({ onNavigate }) {
 
     try {
       const authService = new AuthService();
-      await authService.register({
+      const registeredUser = await authService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         username: formData.username,
         password: formData.password,
         role: formData.role
       });
+
+      // Persist fresh session and route by role immediately after signup.
+      if (registeredUser) {
+        localStorage.setItem('ebakuna_user', JSON.stringify(registeredUser));
+      }
+
+      if (registeredUser && typeof onLogin === 'function') {
+        onLogin(registeredUser);
+        return;
+      }
       
       setSuccessMessage('✅ Registration successful! Redirecting to login...');
       // Redirect to login after 2 seconds

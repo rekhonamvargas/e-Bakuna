@@ -61,7 +61,7 @@ export default function App() {
     } else if (normalizedDescription.includes('staff')) {
         setCurrentPage('staff-dashboard');
     } else {
-      setCurrentPage('login');
+      setCurrentPage('citizen-dashboard');
     }
   };
 
@@ -117,19 +117,21 @@ export default function App() {
       return <Login onLogin={handleLogin} onNavigate={navigateTo} />;
     case 'register':
     case 'registration':
-      return <Registration onNavigate={navigateTo} />;
+      return <Registration onNavigate={navigateTo} onLogin={handleLogin} />;
+    case 'provider-dashboard':
+      return <ProviderDashboard user={currentUser} onLogout={handleLogout} />;
+    case 'staff-dashboard':
+      return <StaffDashboard user={currentUser} onLogout={handleLogout} />;
     case 'booking-portal':
     case 'citizen-dashboard':
-    case 'staff-dashboard':
-    case 'provider-dashboard':
+      return <BookingPortal user={currentUser} onLogout={handleLogout} />;
+    case 'legacy-shell':
       return (
         <div className="app-shell">
           <header className="app-shell-header">
             <div>
               <h1>E-Bakuna</h1>
               <p>
-                {currentPage === 'provider-dashboard' && 'Provider portal'}
-                {currentPage === 'staff-dashboard' && 'Clinic staff portal'}
                 {currentPage === 'citizen-dashboard' && 'Citizen booking portal'}
                 {currentPage === 'booking-portal' && 'Citizen booking portal'}
               </p>

@@ -4,6 +4,7 @@
     "description": "[BUILD AGENT GENERATED]:  Vaccination appointment booking system",
     "license": "UNLICENSED",
     "scripts": {
+        "dev": "now-sdk build && now-sdk install",
         "build": "now-sdk build",
         "deploy": "now-sdk install",
         "transform": "now-sdk transform",
