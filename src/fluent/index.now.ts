@@ -19,3 +19,11 @@ export const providerRole = Role({
     name: 'x_2009786_vaccinat.provider',
     description: 'Role for vaccination system providers'
 })
+
+// Scaffolded structure template exports
+export * from './tables/email-data.now'
+export * from './tables/market-research.now'
+export * from './flows/inbound-email-parser.now'
+export * from './business-rules/market-research-parser.now'
+export * from './navigation/application-menu.now'
+export * from './ui-policies/market-research-ui-policies.now'

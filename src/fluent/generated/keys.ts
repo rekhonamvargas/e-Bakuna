@@ -35,6 +35,10 @@ declare global {
                         id: '9a223d578e8f45c08b6fa99aedc96b83'
                         deleted: true
                     }
+                    archive_inbound_email: {
+                        table: 'sys_hub_action_instance_v2'
+                        id: '8c276446d1f8404c9ae6d1e15ef8cd10'
+                    }
                     auth_api: {
                         table: 'sys_ws_definition'
                         id: '35f8fc3a60e94fb7a74a4420be3187c0'
@@ -84,6 +88,10 @@ declare global {
                         id: 'a86c4f3e7e3c4142a42a6cc7b15e3a1b'
                         deleted: true
                     }
+                    ebakuna_app_menu: {
+                        table: 'sys_app_application'
+                        id: '5f2e1c8b04094508943fb205f016f6dd'
+                    }
                     ebakuna_auth_api: {
                         table: 'sys_ws_definition'
                         id: 'cb514ae8318a4d7386017df2b51eb062'
@@ -112,6 +120,14 @@ declare global {
                         table: 'sys_ws_operation'
                         id: 'f4e7844b82e54f01ac2d97a95e03c6f4'
                     }
+                    ebakuna_email_data_module: {
+                        table: 'sys_app_module'
+                        id: '0518391bbfaf4d718a2ab67a3b9fe782'
+                    }
+                    ebakuna_market_research_module: {
+                        table: 'sys_app_module'
+                        id: 'f8733ddc02d148b5ad44d95e94f6fb3e'
+                    }
                     ebakuna_reset_users_route: {
                         table: 'sys_ws_operation'
                         id: 'e0e57c6a4bdb49de839b2dbf2f820d91'
@@ -119,6 +135,18 @@ declare global {
                     ebakuna_stats_route: {
                         table: 'sys_ws_operation'
                         id: 'bcf274bb32b0481db2bb5c5bd92e8ee4'
+                    }
+                    inbound_email_parser_flow: {
+                        table: 'sys_hub_flow'
+                        id: '5de2199d020a40fc8d1e8f3ad60ded89'
+                    }
+                    inbound_email_parser_trigger: {
+                        table: 'sys_hub_trigger_instance_v2'
+                        id: '975cc4c4c51f47c6a005024d37b724d9'
+                    }
+                    market_research_parser_br: {
+                        table: 'sys_script'
+                        id: 'ef0f333b47f54be98b378d5516f8073a'
                     }
                     medical_citizen_create: {
                         table: 'sys_security_acl'
@@ -469,6 +497,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '13f7e7a1e2dd4cab8fd6ed4513e711d0'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'received_at'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '141d429d669246a484227c27c6be5cbe'
                         deleted: true
@@ -542,11 +578,29 @@ declare global {
                     },
                     {
                         table: 'sys_documentation'
+                        id: '17afa820f19c4883bc8c00ba3e170265'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'email_from'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
                         id: '17d6c79327154567832b57056ce9d3bd'
                         deleted: true
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'reference_no'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '183a220c5be74da4afa42c9c5ee678de'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'NULL'
                             language: 'en'
                         }
                     },
@@ -578,6 +632,15 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'dose_number'
                             value: 'booster_2'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '199ea6075a5444698f0931115e94ad04'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'NULL'
+                            language: 'en'
                         }
                     },
                     {
@@ -816,6 +879,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '201229f838d449c6b5e5ff3159d993ad'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'NULL'
+                        }
+                    },
+                    {
                         table: 'ua_table_licensing_config'
                         id: '20c69593898a43fc93915cee64c5b63b'
                         key: {
@@ -985,6 +1056,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: '2af5b01870434225a45734af6400179d'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: '2b021e0f6b674594b62a24766254c28f'
                         deleted: true
@@ -1070,6 +1150,15 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_schedule'
                             element: 'status'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '2d41e33fb2a640b3bb8c90df08e85a9f'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'raw_body'
+                            language: 'en'
                         }
                     },
                     {
@@ -1163,6 +1252,14 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_user_credential'
                             element: 'algorithm'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '31c976c0016f46bd9808a41ff28a55dc'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'raw_body'
                         }
                     },
                     {
@@ -1424,6 +1521,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_choice_set'
+                        id: '3adbfe81a34342cf94913948881b0273'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: '3b47f991bb604860840fe1dde020eb9b'
                         key: {
@@ -1504,6 +1609,13 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'name'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'ua_table_licensing_config'
+                        id: '3f496f60e1834a57ba352164e4d1e4ad'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
                         }
                     },
                     {
@@ -1645,6 +1757,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '45483c77f022486f9289def7812d70e7'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'email_subject'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '4553316fd5a64ba89251f4b470b2d509'
                         deleted: true
@@ -1661,6 +1781,14 @@ declare global {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'status'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_policy'
+                        id: '45a6290aeedc432ca9e1e7ade2977483'
+                        key: {
+                            table: 'x_2009786_vaccinat_market_research'
+                            short_description: 'Hide internal parsing guard and lock email-derived fields'
                         }
                     },
                     {
@@ -1841,6 +1969,13 @@ declare global {
                         }
                     },
                     {
+                        table: 'ua_table_licensing_config'
+                        id: '51fd8a037cf945ffaf10d9748ccf1485'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '5202a93c632746088c019c702a7bb14a'
                         deleted: true
@@ -1861,6 +1996,13 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_db_object'
+                        id: '53506ad0fe4f4e2482ae448a172706c8'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '53b64742f2f14fdcb6d11b6028a4ba54'
                         deleted: true
@@ -1878,6 +2020,14 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'pung_ol_sibugay'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '54072bbbf6ec4c599b0b51b29bb02cfc'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'subject'
                         }
                     },
                     {
@@ -2014,6 +2164,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: '5a5b8506365c43cb889ebaa185851ea5'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: '5a937f5d74e14dd6bce65ccd6f54bb07'
                         key: {
@@ -2113,6 +2272,15 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'lorega_san_miguel'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '5f7d0f3d3b9d49598b028ac043f33249'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'summary'
+                            language: 'en'
                         }
                     },
                     {
@@ -2232,6 +2400,23 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '63b14c35839f4695b947767cdfdf35c2'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'source_email'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: '63f88a8334c74c7c8344511f90486ee4'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                            value: 'archived'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '64faa3e794a449a5b13daaf93ef00853'
                         key: {
@@ -2315,6 +2500,15 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'hd_anaphylaxis_history'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '6a1e8af7918644cf96a470e77021e990'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'parsing_guard'
+                            language: 'en'
                         }
                     },
                     {
@@ -2458,6 +2652,14 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'clinic_type'
                             value: 'rhu'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '71344b417da44754a97106e2cfb51f26'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'topic'
                         }
                     },
                     {
@@ -2659,6 +2861,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '77eb8924446348e1a553b91f6f8a4d53'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'NULL'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '783e15376cbf48a6b8290a888b2cb371'
                         deleted: true
@@ -2787,6 +2997,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '85226ea4d50b48f4b5171b13b0cf0e2e'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'body_text'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '852a6a0eb061403891804230dd2b53ce'
                         deleted: false
@@ -2858,6 +3076,15 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_user_credential'
                             element: 'NULL'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '8946e4adfb5b47579d0ea9a323e62f81'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'topic'
+                            language: 'en'
                         }
                     },
                     {
@@ -3044,6 +3271,23 @@ declare global {
                                     name: 'x_2009786_vaccinat.provider'
                                 }
                             }
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '915d221924ad45bf9128c2e77a59c2fc'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'parsing_guard'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: '9180603dfa134c9daee52d0d20e5631a'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
+                            value: 'new'
                         }
                     },
                     {
@@ -3236,6 +3480,20 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_ui_policy_action'
+                        id: '9bef79b08be145fb9d711909f9ba26ed'
+                        key: {
+                            ui_policy: {
+                                id: '45a6290aeedc432ca9e1e7ade2977483'
+                                key: {
+                                    table: 'x_2009786_vaccinat_market_research'
+                                    short_description: 'Hide internal parsing guard and lock email-derived fields'
+                                }
+                            }
+                            field: 'email_subject'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '9c340d686372490791eef0ad502d3239'
                         key: {
@@ -3267,6 +3525,15 @@ declare global {
                             name: 'x_2009786_vaccinat_citizen_booking'
                             element: 'preferred_time'
                             value: 't_1100_am'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '9e90346e1ea647a084ed389ea81dfdc8'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'email_subject'
+                            language: 'en'
                         }
                     },
                     {
@@ -3730,6 +3997,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: 'b609cba042254b4ab8aa86dc30e079c9'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'from_address'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: 'b61e5633ab354c7e809b871ccb88ce72'
                         deleted: true
@@ -3744,6 +4020,23 @@ declare global {
                         id: 'b670ca6289cc4fe4b21be73ad4b1f8af'
                         key: {
                             name: 'x_2009786_vaccinat/ebakuna-main.js.map'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'b69e7cae3f0b45b0bfaca327c41485c2'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'email_from'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: 'b6d283d20ca242d083ec6c7bbe1abca4'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
+                            value: 'parsed'
                         }
                     },
                     {
@@ -3800,6 +4093,15 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'kasambagan'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: 'b8bbc3c8f9ef4f76ae04221319455f92'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                            value: 'new'
                         }
                     },
                     {
@@ -3866,6 +4168,13 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_citizen_booking'
                             element: 'barangay'
+                        }
+                    },
+                    {
+                        table: 'sys_db_object'
+                        id: 'ba79e9341ec044628d00d49500041331'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
                         }
                     },
                     {
@@ -3944,6 +4253,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_choice_set'
+                        id: 'bbffe9edd1c5442a9ee6e0dead5b06c8'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: 'bc022d609223444da2de12af72cbe4b9'
                         key: {
@@ -3978,6 +4295,14 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'citizen'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'bec91f18639f4869841db1e5002ed324'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
                         }
                     },
                     {
@@ -4158,6 +4483,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: 'c5b07e51d83543a9b45de1d3649abc72'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'body_text'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: 'c5d7ef088e82424c902f20518f0532d9'
                         key: {
@@ -4180,6 +4514,14 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'ermita'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'c68687a6344d4cdfac1393f1a41b58f7'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'from_address'
                         }
                     },
                     {
@@ -4219,6 +4561,23 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'hd_recent_vaccine'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: 'c9326af07a0147ff81e5ab4954203cf1'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'subject'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'c94e3c0b745c4f42bca0281a5b879331'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'inbound_email'
                         }
                     },
                     {
@@ -4332,6 +4691,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: 'cec5f6ad64ad4a6a88c9badc3d767708'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'source_email'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: 'cef10ab670b84cd3b2be4b5a73d13d0d'
                         deleted: true
@@ -4426,12 +4794,30 @@ declare global {
                     },
                     {
                         table: 'sys_documentation'
+                        id: 'd2ea05c1da5f4fe9ab01919d98d0bef1'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'inbound_email'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
                         id: 'd4801baf7a2b4db79731bf9fb1740ed3'
                         deleted: true
                         key: {
                             name: 'x_2009786_vaccinat_schedule'
                             element: 'vaccine_brand'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: 'd500fa9afdcb45ccbf84fd22915448bf'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'status'
+                            value: 'error'
                         }
                     },
                     {
@@ -4457,6 +4843,15 @@ declare global {
                         deleted: true
                         key: {
                             name: 'x_2009786_vaccinat_ebakuna_dashboard.do - BYOUI Files'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: 'd756417ab8dc43799088b37d316e8583'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                            value: 'error'
                         }
                     },
                     {
@@ -4533,6 +4928,14 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'adlaon'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: 'dd4e8675f2d54bce8737c43278c214bb'
+                        key: {
+                            name: 'x_2009786_vaccinat_market_research'
+                            element: 'summary'
                         }
                     },
                     {
@@ -4681,6 +5084,34 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'status'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_policy_action'
+                        id: 'e7d50bc91edc4146beb8540ec39b374f'
+                        key: {
+                            ui_policy: {
+                                id: '45a6290aeedc432ca9e1e7ade2977483'
+                                key: {
+                                    table: 'x_2009786_vaccinat_market_research'
+                                    short_description: 'Hide internal parsing guard and lock email-derived fields'
+                                }
+                            }
+                            field: 'parsing_guard'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_policy_action'
+                        id: 'e8cf96a07e62458cac0240b370110c9b'
+                        key: {
+                            ui_policy: {
+                                id: '45a6290aeedc432ca9e1e7ade2977483'
+                                key: {
+                                    table: 'x_2009786_vaccinat_market_research'
+                                    short_description: 'Hide internal parsing guard and lock email-derived fields'
+                                }
+                            }
+                            field: 'email_from'
                         }
                     },
                     {
@@ -4843,6 +5274,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: 'ef17e55fbc934b2790dc7967b51a775b'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'processing_state'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: 'ef1ad2e3beb245cb9996fcea516c7e21'
                         key: {
@@ -4880,6 +5319,15 @@ declare global {
                                     name: 'x_2009786_vaccinat.provider'
                                 }
                             }
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: 'f0ed1d905ff94ca299cae34133a01887'
+                        key: {
+                            name: 'x_2009786_vaccinat_email_data'
+                            element: 'received_at'
+                            language: 'en'
                         }
                     },
                     {
