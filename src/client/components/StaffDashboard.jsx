@@ -78,42 +78,62 @@ export default function StaffDashboard({ user, onLogout }) {
     }
   };
 
+  const VACCINE_FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'covid-19-booster', label: 'COVID-19 Booster' },
+    { key: 'flu-vaccine', label: 'Flu Vaccine' },
+    { key: 'hepatitis-b', label: 'Hepatitis B' },
+    { key: 'pneumococcal', label: 'Pneumococcal' },
+    { key: 'mmr', label: 'MMR' },
+    { key: 'varicella', label: 'Varicella' },
+    { key: 'tetanus-td', label: 'Tetanus (Td)' },
+  ];
+
   const filteredPendingBookings = bookings.filter(booking => {
     const status = extractValue(booking.booking_status).toLowerCase();
     if (!status.includes('pending') && !status.includes('review')) return false;
 
     if (filter === 'all') return true;
-    if (filter === 'covid') return extractValue(booking.vaccine_type).toLowerCase().includes('covid');
-    if (filter === 'flu') return extractValue(booking.vaccine_type).toLowerCase().includes('flu');
-    if (filter === 'others') {
-      const vaccine = extractValue(booking.vaccine_type).toLowerCase();
-      return !vaccine.includes('covid') && !vaccine.includes('flu');
+
+    const vaccine = extractValue(booking.vaccine_type).toLowerCase();
+    switch (filter) {
+      case 'covid-19-booster': return vaccine.includes('covid-19') || vaccine.includes('booster');
+      case 'flu-vaccine': return vaccine.includes('flu');
+      case 'hepatitis-b': return vaccine.includes('hepatitis');
+      case 'pneumococcal': return vaccine.includes('pneumococcal');
+      case 'mmr': return vaccine.includes('mmr');
+      case 'varicella': return vaccine.includes('varicella');
+      case 'tetanus-td': return vaccine.includes('tetanus') || vaccine.includes('td');
+      default: return true;
     }
-    return true;
   });
 
-  const filterCounts = {
-    all: bookings.filter(b => {
-      const status = extractValue(b.booking_status).toLowerCase();
-      return status.includes('pending') || status.includes('review');
-    }).length,
-    covid: bookings.filter(b => {
-      const status = extractValue(b.booking_status).toLowerCase();
-      const vaccine = extractValue(b.vaccine_type).toLowerCase();
-      return (status.includes('pending') || status.includes('review')) && vaccine.includes('covid');
-    }).length,
-    flu: bookings.filter(b => {
-      const status = extractValue(b.booking_status).toLowerCase();
-      const vaccine = extractValue(b.vaccine_type).toLowerCase();
-      return (status.includes('pending') || status.includes('review')) && vaccine.includes('flu');
-    }).length,
-    others: bookings.filter(b => {
-      const status = extractValue(b.booking_status).toLowerCase();
-      const vaccine = extractValue(b.vaccine_type).toLowerCase();
-      return (status.includes('pending') || status.includes('review')) &&
-             !vaccine.includes('covid') && !vaccine.includes('flu');
-    }).length
-  };
+  const filterCounts = VACCINE_FILTERS.reduce((acc, vaccineFilter) => {
+    if (vaccineFilter.key === 'all') {
+      acc.all = bookings.filter(b => {
+        const status = extractValue(b.booking_status).toLowerCase();
+        return status.includes('pending') || status.includes('review');
+      }).length;
+    } else {
+      acc[vaccineFilter.key] = bookings.filter(b => {
+        const status = extractValue(b.booking_status).toLowerCase();
+        const vaccine = extractValue(b.vaccine_type).toLowerCase();
+        if (!(status.includes('pending') || status.includes('review'))) return false;
+
+        switch (vaccineFilter.key) {
+          case 'covid-19-booster': return vaccine.includes('covid-19') || vaccine.includes('booster');
+          case 'flu-vaccine': return vaccine.includes('flu');
+          case 'hepatitis-b': return vaccine.includes('hepatitis');
+          case 'pneumococcal': return vaccine.includes('pneumococcal');
+          case 'mmr': return vaccine.includes('mmr');
+          case 'varicella': return vaccine.includes('varicella');
+          case 'tetanus-td': return vaccine.includes('tetanus') || vaccine.includes('td');
+          default: return false;
+        }
+      }).length;
+    }
+    return acc;
+  }, {});
 
   if (loading) {
     return (
@@ -137,30 +157,15 @@ export default function StaffDashboard({ user, onLogout }) {
           </div>
 
           <div className="staff-filter-chips">
-            <button
-              className={filter === 'all' ? 'active' : ''}
-              onClick={() => setFilter('all')}
-            >
-              All ({filterCounts.all})
-            </button>
-            <button
-              className={filter === 'covid' ? 'active' : ''}
-              onClick={() => setFilter('covid')}
-            >
-              COVID-19 ({filterCounts.covid})
-            </button>
-            <button
-              className={filter === 'flu' ? 'active' : ''}
-              onClick={() => setFilter('flu')}
-            >
-              Flu ({filterCounts.flu})
-            </button>
-            <button
-              className={filter === 'others' ? 'active' : ''}
-              onClick={() => setFilter('others')}
-            >
-              Others ({filterCounts.others})
-            </button>
+            {VACCINE_FILTERS.map(vaccineFilter => (
+              <button
+                key={vaccineFilter.key}
+                className={filter === vaccineFilter.key ? 'active' : ''}
+                onClick={() => setFilter(vaccineFilter.key)}
+              >
+                {vaccineFilter.label} ({filterCounts[vaccineFilter.key] || 0})
+              </button>
+            ))}
           </div>
 
           {/* ✅ SCROLL AREA ONLY */}
