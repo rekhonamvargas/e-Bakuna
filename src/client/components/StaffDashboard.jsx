@@ -1,144 +1,83 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { EBakunaService } from '../services/EBakunaService.js';
-import './StaffDashboard.css';
+<div className="staff-pending-panel">
+  <div className="staff-panel-header">
+    <h2>Pending Booking Requests</h2>
+  </div>
 
-export default function StaffDashboard({ user, onLogout, hideLogout = false }) {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [assignedDates, setAssignedDates] = useState({});
-  const [updatingId, setUpdatingId] = useState(null);
+  <div className="staff-filter-chips">
+    {/* filters here */}
+  </div>
 
-  const svc = useMemo(() => new EBakunaService(), []);
+  {/* ✅ SCROLL AREA ONLY */}
+  <div className="pending-scroll-wrapper">
+    <div className="pending-card-list">
+      {filteredPendingBookings.length === 0 ? (
+        <div className="empty-state">No pending bookings for this filter.</div>
+      ) : (
+        filteredPendingBookings.map((booking) => {
+          const citizenName = extractValue(booking.citizen_name) || 'Unknown Citizen';
+          const vaccine = extractValue(booking.vaccine_type) || 'N/A';
+          const preferredDate = formatDate(
+            extractValue(booking.first_dose_date) ||
+            extractValue(booking.preferred_date)
+          );
+          const reference = extractValue(booking.booking_reference) || '--';
+          const dob = formatDate(extractValue(booking.date_of_birth));
+          const contact = extractValue(booking.contact_number) || '--';
+          const note = extractValue(booking.special_requirements) || 'No allergies declared';
+          const dateValue = getAssignDate(booking);
 
-  useEffect(() => {
-    loadBookings();
-  }, []);
+          return (
+            <article key={booking.sys_id} className="pending-card">
+              <div className="pending-left">
+                <span className="pending-avatar">
+                  {getInitials(citizenName)}
+                </span>
 
-  const loadBookings = async () => {
-    try {
-      setLoading(true);
-      const data = await svc.getBookings({
-        sysparm_query: 'booking_status=pending',
-        sysparm_limit: '100'
-      });
-      setBookings(data || []);
-    } catch (e) {
-      console.error(e);
-      setBookings([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+                <div>
+                  <h3>{citizenName}</h3>
+                  <p>{vaccine} · Preferred: {preferredDate} · Ref: {reference}</p>
+                  <p>DOB: {dob} · {contact} · {note}</p>
+                </div>
+              </div>
 
-  const extract = (f) =>
-    f && typeof f === 'object' ? f.display_value || f.value || '' : f || '';
+              <div className="pending-actions">
+                <div>
+                  <label>Assign date</label>
+                  <input
+                    type="date"
+                    value={dateValue}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAssignedDates((prev) => ({
+                        ...prev,
+                        [booking.sys_id]: value
+                      }));
+                    }}
+                  />
+                </div>
 
-  const formatDate = (d) => {
-    if (!d) return '--';
-    const date = new Date(d);
-    return isNaN(date)
-      ? d
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+                <div className="action-buttons">
+                  <button
+                    className="btn-primary"
+                    onClick={() => reviewBooking(booking, 'confirmed')}
+                    disabled={updatingId === booking.sys_id}
+                  >
+                    Approve
+                  </button>
 
-  const getInitials = (name) => {
-    if (!name) return 'PT';
-    const parts = name.split(' ');
-    return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
-  };
-
-  const filtered = bookings;
-
-  if (loading) return <div className="loading">Loading...</div>;
-
-  return (
-    <div className="staff-dashboard">
-
-      {/* TOPBAR */}
-      <header className="staff-topbar">
-        <h1>Staff Dashboard</h1>
-        {!hideLogout && <button onClick={onLogout}>Logout</button>}
-      </header>
-
-      {/* CONTENT */}
-      <div className="container">
-
-        <section className="staff-pending-panel">
-
-          {/* HEADER */}
-          <div className="staff-panel-header">
-            <h2>Pending Booking Requests</h2>
-          </div>
-
-          {/* FILTERS */}
-          <div className="staff-filter-chips">
-            <button
-              className={activeFilter === 'all' ? 'active' : ''}
-              onClick={() => setActiveFilter('all')}
-            >
-              All
-            </button>
-          </div>
-
-          {/* ✅ SCROLLABLE LIST */}
-          <div className="pending-card-list">
-            {filtered.length === 0 ? (
-              <div className="empty-state">No pending bookings.</div>
-            ) : (
-              filtered.map((b) => {
-                const name = extract(b.citizen_name) || 'Unknown';
-
-                return (
-                  <div key={b.sys_id} className="pending-card">
-                    <div className="pending-left">
-                      <div className="pending-avatar">
-                        {getInitials(name)}
-                      </div>
-                      <div>
-                        <h3>{name}</h3>
-                        <p>
-                          {extract(b.vaccine_type)} ·{' '}
-                          {formatDate(extract(b.preferred_date))}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pending-actions">
-                      <input
-                        type="date"
-                        value={assignedDates[b.sys_id] || ''}
-                        onChange={(e) =>
-                          setAssignedDates((p) => ({
-                            ...p,
-                            [b.sys_id]: e.target.value
-                          }))
-                        }
-                      />
-
-                      <button
-                        onClick={() => alert('Approved')}
-                        disabled={updatingId === b.sys_id}
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        onClick={() => alert('Rejected')}
-                        disabled={updatingId === b.sys_id}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-        </section>
-
-      </div>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => reviewBooking(booking, 'cancelled')}
+                    disabled={updatingId === booking.sys_id}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </article>
+          );
+        })
+      )}
     </div>
-  );
-}
+  </div>
+</div>

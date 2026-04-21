@@ -14,7 +14,7 @@
   justify-content: space-between;
 }
 
-/* MAIN CONTAINER */
+/* MAIN */
 .container {
   flex: 1;
   display: flex;
@@ -23,24 +23,32 @@
 }
 
 /* PANEL */
+/* PANEL should NOT scroll */
 .staff-pending-panel {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 500px; /* adjust depending on your layout */
 }
 
-/* HEADER */
-.staff-panel-header {
-  flex-shrink: 0;
+/* ONLY this scrolls */
+.pending-scroll-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding-right: 6px;
 }
 
-/* FILTERS */
-.staff-filter-chips {
-  flex-shrink: 0;
-  margin: 10px 0;
+/* Optional: nicer scrollbar */
+.pending-scroll-wrapper::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* ✅ SCROLLABLE AREA */
+.pending-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #d88;
+  border-radius: 6px;
+}
+
+/* ✅ SCROLLABLE LIST ONLY */
 .pending-card-list {
   flex: 1;
   overflow-y: auto;
@@ -55,11 +63,11 @@
   justify-content: space-between;
   background: #fff;
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
 }
 
-/* LEFT SIDE */
+/* LEFT */
 .pending-left {
   display: flex;
   gap: 10px;
@@ -68,26 +76,55 @@
 .pending-avatar {
   width: 35px;
   height: 35px;
-  background: #eee;
   border-radius: 50%;
+  background: #eee;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
 }
 
 /* ACTIONS */
 .pending-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
 }
 
-.pending-actions input {
-  height: 28px;
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.pending-actions button {
-  padding: 5px 10px;
+.btn-primary {
+  background: #dff3e4;
+  border: 1px solid #a4d5b1;
+  color: #187145;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #fde9ea;
+  border: 1px solid #efc0c3;
+  color: #c0343d;
+  padding: 5px;
+  cursor: pointer;
+}
+
+/* STATIC BOTTOM */
+.staff-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.bottom-panel {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
 }
 
 /* EMPTY */
