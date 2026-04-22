@@ -7,6 +7,7 @@ export default function StaffDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [assignedDates, setAssignedDates] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
+  const [actionError, setActionError] = useState('');
   const [filter, setFilter] = useState('all');
 
   const ebakunaService = useMemo(() => new EBakunaService(), []);
@@ -64,15 +65,14 @@ export default function StaffDashboard({ user, onLogout }) {
 
   const reviewBooking = async (booking, status) => {
     setUpdatingId(booking.sys_id);
+    setActionError('');
     try {
       const assignDate = assignedDates[booking.sys_id];
-      await ebakunaService.updateBooking(booking.sys_id, {
-        booking_status: status,
-        assigned_date: assignDate || null
-      });
+      await ebakunaService.reviewBooking(booking.sys_id, status, assignDate);
       await loadBookings(); // Refresh the list
     } catch (error) {
       console.error('Error updating booking:', error);
+      setActionError(error.message || 'Failed to update booking status. Please try again.');
     } finally {
       setUpdatingId(null);
     }
@@ -155,6 +155,12 @@ export default function StaffDashboard({ user, onLogout }) {
           <div className="staff-panel-header">
             <h2>Pending Booking Requests</h2>
           </div>
+
+          {actionError && (
+            <div className="error-alert" role="alert">
+              {actionError}
+            </div>
+          )}
 
           <div className="staff-filter-chips">
             {VACCINE_FILTERS.map(vaccineFilter => (

@@ -5,6 +5,7 @@ export class EBakunaService {
   constructor() {
     this.baseUrl = '/api/now/table'
     this.scope = 'x_2009786_vaccinat'
+    this.authApiUrl = '/api/x_2009786_vaccinat/v1/ebakuna_auth'
   }
 
   // Helper method to get authenticated headers
@@ -226,6 +227,34 @@ export class EBakunaService {
       return data.result
     } catch (error) {
       console.error('Error updating booking:', error)
+      throw error
+    }
+  }
+
+  async reviewBooking(bookingSysId, status, assignedDate) {
+    try {
+      const payload = {
+        bookingSysId,
+        status
+      }
+
+      if (assignedDate) {
+        payload.assignedDate = assignedDate
+      }
+
+      const response = await fetch(`${this.authApiUrl}/review-booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await this.handleResponse(response)
+      return data.booking || data.result || data
+    } catch (error) {
+      console.error('Error reviewing booking:', error)
       throw error
     }
   }

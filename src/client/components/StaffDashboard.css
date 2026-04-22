@@ -52,6 +52,16 @@
   color: #333;
 }
 
+.error-alert {
+  margin: 12px 20px 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fde9ea;
+  border: 1px solid #efc0c3;
+  color: #9e1f29;
+  font-size: 14px;
+}
+
 /* FILTER CHIPS */
 .staff-filter-chips {
   display: flex;
