@@ -79,19 +79,33 @@ export default function StaffDashboard({ user, onLogout }) {
     setActionSuccess('');
 
     try {
-      const assignDate = assignedDates[bookingId];
+      const assignDate = status === 'confirmed' ? assignedDates[bookingId] : '';
       await ebakunaService.reviewBooking(bookingId, status, assignDate);
       setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
       window.alert(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
       await loadBookings(); // Refresh the list
     } catch (error) {
+      const shouldFallback = !error || !error.status || error.status === 404 || error.status === 405;
+      if (!shouldFallback) {
+        const message = error.message || 'Failed to update booking status. Please try again.';
+        console.error('Error updating booking:', error);
+        setActionError(message);
+        window.alert(message);
+        return;
+      }
+
       // Fallback: attempt direct table update in case scripted API route is unavailable.
       try {
-        const assignDate = assignedDates[bookingId];
-        await ebakunaService.updateBooking(bookingId, {
+        const assignDate = status === 'confirmed' ? assignedDates[bookingId] : '';
+        const updatePayload = {
           booking_status: status,
-          first_dose_date: assignDate || null
-        });
+        };
+
+        if (assignDate) {
+          updatePayload.first_dose_date = assignDate;
+        }
+
+        await ebakunaService.updateBooking(bookingId, updatePayload);
         setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
         window.alert(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
         await loadBookings();
@@ -227,9 +241,11 @@ export default function StaffDashboard({ user, onLogout }) {
                   const note = extractValue(booking.special_requirements) || 'No allergies declared';
                   const dateValue = getAssignDate(booking);
                   const bookingId = extractValue(booking.sys_id);
+                  const rowKey = bookingId || reference || `${citizenName}-${preferredDate}`;
+                  const actionsDisabled = !bookingId;
 
                   return (
-                    <article key={bookingId} className="pending-card">
+                    <article key={rowKey} className="pending-card">
                       <div className="pending-left">
                         <span className="pending-avatar">
                           {getInitials(citizenName)}
@@ -262,7 +278,7 @@ export default function StaffDashboard({ user, onLogout }) {
                           <button
                             className="btn-primary"
                             onClick={() => reviewBooking(booking, 'confirmed')}
-                            disabled={updatingId === bookingId}
+                            disabled={actionsDisabled || updatingId === bookingId}
                           >
                             Approve
                           </button>
@@ -270,7 +286,7 @@ export default function StaffDashboard({ user, onLogout }) {
                           <button
                             className="btn-secondary"
                             onClick={() => reviewBooking(booking, 'cancelled')}
-                            disabled={updatingId === bookingId}
+                            disabled={actionsDisabled || updatingId === bookingId}
                           >
                             Reject
                           </button>
