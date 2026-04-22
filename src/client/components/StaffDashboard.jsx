@@ -8,6 +8,7 @@ export default function StaffDashboard({ user, onLogout }) {
   const [assignedDates, setAssignedDates] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
   const [actionError, setActionError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
   const [filter, setFilter] = useState('all');
 
   const ebakunaService = useMemo(() => new EBakunaService(), []);
@@ -52,7 +53,8 @@ export default function StaffDashboard({ user, onLogout }) {
   };
 
   const getAssignDate = (booking) => {
-    const assigned = assignedDates[booking.sys_id];
+    const bookingId = extractValue(booking.sys_id);
+    const assigned = assignedDates[bookingId];
     if (assigned) return assigned;
 
     const preferred = extractValue(booking.preferred_date) || extractValue(booking.first_dose_date);
@@ -64,15 +66,39 @@ export default function StaffDashboard({ user, onLogout }) {
   };
 
   const reviewBooking = async (booking, status) => {
-    setUpdatingId(booking.sys_id);
+    const bookingId = extractValue(booking.sys_id);
+    if (!bookingId) {
+      const idError = 'Cannot update booking: missing booking id.';
+      setActionError(idError);
+      window.alert(idError);
+      return;
+    }
+
+    setUpdatingId(bookingId);
     setActionError('');
+    setActionSuccess('');
+
     try {
-      const assignDate = assignedDates[booking.sys_id];
+      const assignDate = assignedDates[bookingId];
       await ebakunaService.reviewBooking(booking.sys_id, status, assignDate);
+      setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
       await loadBookings(); // Refresh the list
     } catch (error) {
-      console.error('Error updating booking:', error);
-      setActionError(error.message || 'Failed to update booking status. Please try again.');
+      // Fallback: attempt direct table update in case scripted API route is unavailable.
+      try {
+        const assignDate = assignedDates[bookingId];
+        await ebakunaService.updateBooking(bookingId, {
+          booking_status: status,
+          first_dose_date: assignDate || null
+        });
+        setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
+        await loadBookings();
+      } catch (fallbackError) {
+        console.error('Error updating booking:', fallbackError);
+        const message = fallbackError.message || error.message || 'Failed to update booking status. Please try again.';
+        setActionError(message);
+        window.alert(message);
+      }
     } finally {
       setUpdatingId(null);
     }
@@ -162,6 +188,12 @@ export default function StaffDashboard({ user, onLogout }) {
             </div>
           )}
 
+          {actionSuccess && (
+            <div className="success-alert" role="status">
+              {actionSuccess}
+            </div>
+          )}
+
           <div className="staff-filter-chips">
             {VACCINE_FILTERS.map(vaccineFilter => (
               <button
@@ -192,9 +224,10 @@ export default function StaffDashboard({ user, onLogout }) {
                   const contact = extractValue(booking.contact_number) || '--';
                   const note = extractValue(booking.special_requirements) || 'No allergies declared';
                   const dateValue = getAssignDate(booking);
+                  const bookingId = extractValue(booking.sys_id);
 
                   return (
-                    <article key={booking.sys_id} className="pending-card">
+                    <article key={bookingId} className="pending-card">
                       <div className="pending-left">
                         <span className="pending-avatar">
                           {getInitials(citizenName)}
@@ -217,7 +250,7 @@ export default function StaffDashboard({ user, onLogout }) {
                               const value = e.target.value;
                               setAssignedDates((prev) => ({
                                 ...prev,
-                                [booking.sys_id]: value
+                                [bookingId]: value
                               }));
                             }}
                           />
@@ -227,7 +260,7 @@ export default function StaffDashboard({ user, onLogout }) {
                           <button
                             className="btn-primary"
                             onClick={() => reviewBooking(booking, 'confirmed')}
-                            disabled={updatingId === booking.sys_id}
+                            disabled={updatingId === bookingId}
                           >
                             Approve
                           </button>
@@ -235,7 +268,7 @@ export default function StaffDashboard({ user, onLogout }) {
                           <button
                             className="btn-secondary"
                             onClick={() => reviewBooking(booking, 'cancelled')}
-                            disabled={updatingId === booking.sys_id}
+                            disabled={updatingId === bookingId}
                           >
                             Reject
                           </button>
