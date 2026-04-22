@@ -80,8 +80,9 @@ export default function StaffDashboard({ user, onLogout }) {
 
     try {
       const assignDate = assignedDates[bookingId];
-      await ebakunaService.reviewBooking(booking.sys_id, status, assignDate);
+      await ebakunaService.reviewBooking(bookingId, status, assignDate);
       setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
+      window.alert(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
       await loadBookings(); // Refresh the list
     } catch (error) {
       // Fallback: attempt direct table update in case scripted API route is unavailable.
@@ -92,6 +93,7 @@ export default function StaffDashboard({ user, onLogout }) {
           first_dose_date: assignDate || null
         });
         setActionSuccess(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
+        window.alert(`Booking ${status === 'confirmed' ? 'approved' : 'rejected'} successfully.`);
         await loadBookings();
       } catch (fallbackError) {
         console.error('Error updating booking:', fallbackError);
