@@ -28,7 +28,9 @@ export class EBakunaService {
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`
       }
-      throw new Error(errorMessage)
+      const error = new Error(errorMessage)
+      error.status = response.status
+      throw error
     }
     return response.json()
   }
