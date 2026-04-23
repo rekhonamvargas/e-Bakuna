@@ -262,7 +262,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '0481320e0d3242609ade727cdfe015cc'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'email'
@@ -384,7 +384,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '0d49333a3e7c4b77817d6b57493e4962'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'contact_person'
@@ -421,7 +421,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '10ec28355367473e86f19649fe43fd00'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'clinic'
@@ -453,7 +453,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '12867f069af743f2a41fab5203c24384'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'lot_number'
@@ -588,7 +588,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '17d6c79327154567832b57056ce9d3bd'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'reference_no'
@@ -664,7 +664,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '1a96c4a49822436e998dbd449ba1d84d'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'available_slots'
@@ -688,9 +688,17 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '1bc5fa4a8e6442d884ecc9a8a1100385'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_clinic_schedule'
+                            col_name_string: 'clinic'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '1c9ba6d9def24b39aa5924ee95385a13'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'medical_history'
@@ -796,7 +804,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '1e7b084fd9154fe69ad26ccc2c3b8772'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'administered_by'
@@ -805,7 +813,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '1e9f275e50864cfdba65743a678a7867'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'dose_number'
@@ -865,6 +873,13 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_ux_lib_asset'
+                        id: '1fa34f9ace8a412491e2377b4b4bfd63'
+                        key: {
+                            name: 'x_2009786_vaccinat/vendor-react-dom.js.map'
+                        }
+                    },
+                    {
                         table: 'sys_security_acl_role'
                         id: '1fc63597b0d64633b38898326f246c99'
                         deleted: true
@@ -894,9 +909,17 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '211f7c09fb0449d990565fe2bbfa87a8'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_citizen_booking'
+                            col_name_string: 'schedule_slot'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '232bc9a01fe1457c82c9de89c5b819aa'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'start_time'
@@ -906,7 +929,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '2346cc98a3db4c27b1b89839079ff8fa'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'barangay'
@@ -986,7 +1009,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '28523f0b489446cd840be90837ee1602'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccination_status'
@@ -1067,7 +1090,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '2b021e0f6b674594b62a24766254c28f'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'reference_no'
@@ -1136,7 +1159,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '2c7bdfcfc91f4e059b8cd2d10d1ad695'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'gender'
@@ -1210,7 +1233,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '2ef0a2d32a6a40f2af4df2bcd66e29ed'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'email'
@@ -1285,7 +1308,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '32ae09ad5973406c9d5ae12e035c63c3'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'booked_slots'
@@ -1379,7 +1402,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '34faa4dee3c641aa94be40f3740ccb4a'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccination_date'
@@ -1415,7 +1438,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '36332aa5bdea4cd98cc5da46a1e100e4'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'capacity'
@@ -1604,7 +1627,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '3e502ae8f70047ea85cfd1f252693605'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'name'
@@ -1694,7 +1717,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '400bd09fe50e4549893a6ad698a37378'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'capacity'
@@ -1712,7 +1735,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '412e0909ae8a4ad69b31712011f2a3b5'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'notes'
@@ -1792,6 +1815,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '45fca3ee31e048e6a2ef27c0447b7e2d'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_clinic'
+                            col_name_string: 'provider'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '4615a4633af34cc98f6ce1e3bd8de749'
                         deleted: true
@@ -1813,7 +1844,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '478b3e8a3a5744ec83a5c83a90d00f09'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'contact_number'
@@ -1853,7 +1884,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '48caf0bb970748db99262acfa6691e57'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'date_of_birth'
@@ -1861,9 +1892,17 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '4b1929f09bc341bbb1889ad51a52e9e9'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_citizen_booking'
+                            col_name_string: 'appointment'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '4b22e49f2d9d4ccc9f425ac8d10e5a9a'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'barangay'
@@ -1896,7 +1935,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '4e365e19c6ce48dbb136cc256fc8fa76'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'barangay'
@@ -1912,6 +1951,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '4e990ea67cc6463aba559e7a1fa78d81'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_email_data'
+                            col_name_string: 'inbound_email'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '4f74693a03694f0681a00698b45188dc'
                         deleted: true
@@ -1924,7 +1971,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '4fcad0e6a63840de80867dce399cd2e0'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'reference_number'
@@ -1952,7 +1999,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '5116da751ffb442ea6f304b31e77ace5'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'active'
@@ -1978,7 +2025,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '5202a93c632746088c019c702a7bb14a'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'total_slots'
@@ -1988,7 +2035,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '5349447876b04dd9bb8ef7d8fa0c49ff'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'patient_name'
@@ -2033,7 +2080,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '550fce0111b9476d9d906ac04e116734'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'full_name'
@@ -2042,7 +2089,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '557eac60b3034ffbba4eae02160a675d'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'clinic'
@@ -2069,7 +2116,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '566adca4ed774895853c186f84d006d1'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'notes'
@@ -2147,7 +2194,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '597b68ff5f7244ee883992d5519c4ecc'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'patient_id'
@@ -2183,7 +2230,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '5bbb73f4b721460699053d2496dc79bf'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'total_slots'
@@ -2192,7 +2239,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '5bc9fc7455244399bcfe70fd609b64b4'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'vaccine_type'
@@ -2206,6 +2253,13 @@ declare global {
                             name: 'x_2009786_vaccinat_citizen_booking'
                             element: 'NULL'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_ux_lib_asset'
+                        id: '5be6b7a5f7014dd391eff190aa6f6973'
+                        key: {
+                            name: 'x_2009786_vaccinat/vendor-react-dom'
                         }
                     },
                     {
@@ -2248,7 +2302,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '5e26b260db1d40b991d77272d0fc2c85'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'patient_name'
@@ -2313,7 +2367,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '608d6573e636401ea3e411d00b5e0254'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'date_of_birth'
@@ -2322,7 +2376,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '60bbeb89010e4dc68917a1ed82f526cb'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'next_dose_due'
@@ -2438,7 +2492,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '6693efb027714b9db7a6275b8327fce8'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'active'
@@ -2512,6 +2566,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: '6a82352e92dd4303ba2d10196db31569'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_medical_record'
+                            col_name_string: 'appointment'
+                        }
+                    },
+                    {
                         table: 'sys_ui_element'
                         id: '6aa8f152c35407103b31b1f1b40131fd'
                         key: {
@@ -2554,7 +2616,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '6ba03d25cfa6424f99d9d21d98df911f'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'end_time'
@@ -2582,6 +2644,14 @@ declare global {
                                     name: 'x_2009786_vaccinat.provider'
                                 }
                             }
+                        }
+                    },
+                    {
+                        table: 'sys_index'
+                        id: '6d3de4c1539e407f9aca67d6be996fde'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_market_research'
+                            col_name_string: 'source_email'
                         }
                     },
                     {
@@ -2663,6 +2733,24 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_ui_list_element'
+                        id: '71381e6ac3d487103b31b1f1b401312f'
+                        key: {
+                            list_id: {
+                                id: '7538926ac3d487103b31b1f1b4013126'
+                                key: {
+                                    name: 'x_2009786_vaccinat_appointment'
+                                    view: 'Default view'
+                                    sys_domain: 'global'
+                                    element: 'NULL'
+                                    relationship: 'NULL'
+                                    parent: 'NULL'
+                                }
+                            }
+                            element: 'schedule_slot'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: '7178d15bdab249839a20381c08f0bf42'
                         deleted: false
@@ -2674,7 +2762,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '72cd93da389b4d3cb7ab09326e24d3d6'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'appointment_date'
@@ -2758,9 +2846,44 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_ui_list'
+                        id: '7538926ac3d487103b31b1f1b4013126'
+                        key: {
+                            name: 'x_2009786_vaccinat_appointment'
+                            view: {
+                                id: 'Default view'
+                                key: {
+                                    name: 'NULL'
+                                }
+                            }
+                            sys_domain: 'global'
+                            element: 'NULL'
+                            relationship: 'NULL'
+                            parent: 'NULL'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_list_element'
+                        id: '7538926ac3d487103b31b1f1b401312b'
+                        key: {
+                            list_id: {
+                                id: '7538926ac3d487103b31b1f1b4013126'
+                                key: {
+                                    name: 'x_2009786_vaccinat_appointment'
+                                    view: 'Default view'
+                                    sys_domain: 'global'
+                                    element: 'NULL'
+                                    relationship: 'NULL'
+                                    parent: 'NULL'
+                                }
+                            }
+                            element: 'citizen'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '7596e1d51b4e413f98aaac6b49a1a370'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'location'
@@ -2843,7 +2966,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '77b3496e50d34d4b8ef26e9bb9f96f7b'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'schedule_date'
@@ -2871,11 +2994,29 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '783e15376cbf48a6b8290a888b2cb371'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'appointment_date'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_list_element'
+                        id: '7938926ac3d487103b31b1f1b401312c'
+                        key: {
+                            list_id: {
+                                id: '7538926ac3d487103b31b1f1b4013126'
+                                key: {
+                                    name: 'x_2009786_vaccinat_appointment'
+                                    view: 'Default view'
+                                    sys_domain: 'global'
+                                    element: 'NULL'
+                                    relationship: 'NULL'
+                                    parent: 'NULL'
+                                }
+                            }
+                            element: 'reference_number'
                         }
                     },
                     {
@@ -2962,7 +3103,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '81786959f10a4893b0e53c265906afb3'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'booked_slots'
@@ -2971,7 +3112,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '83922f3dbda241c9a52e1af298af8c55'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccine_brand'
@@ -2989,7 +3130,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '8468bea245064d5aaacfbf5d00c44976'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'date_of_birth'
@@ -3026,7 +3167,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '86f47cc8a628465f98819be9b1f25de1'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'end_time'
@@ -3114,7 +3255,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '8bf424f20585451683f86122b4728e24'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'vaccine_type'
@@ -3141,7 +3282,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '8c874d1fa0d141f4b44de039b8565279'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'contact_number'
@@ -3177,7 +3318,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '8d393a1d63fc4a8ba27f821bbf00ff28'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'start_time'
@@ -3253,7 +3394,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '90f11857dcdf4560b79887526eb56b07'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'schedule_date'
@@ -3347,7 +3488,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '958fcaa5407540199eff38f44e4b0ff0'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'barangay'
@@ -3357,7 +3498,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: '960af9db8c754bbb8d87366fcec196c5'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'start_time'
@@ -3367,7 +3508,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '961aa11205db44e68405fc853946ee13'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'name'
@@ -3562,7 +3703,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '9f30741749dc426990a48b9208b7b88f'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'clinic'
@@ -3581,7 +3722,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: '9f57ebfa17b04f79954e62be026b2af5'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'clinic'
@@ -3590,7 +3731,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'a0209405b1f544eeb68332cbf27257ef'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccine_brand'
@@ -3614,6 +3755,14 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'gender'
                             value: 'male'
+                        }
+                    },
+                    {
+                        table: 'sys_index'
+                        id: 'a0e147b9c04a470e84a6427664800456'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_citizen_booking'
+                            col_name_string: 'clinic_schedule'
                         }
                     },
                     {
@@ -3696,6 +3845,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: 'a707dce6101e410fb0e7bcaf52db45aa'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_user_credential'
+                            col_name_string: 'user'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: 'a795adb62af34799adf4bf506734f3a1'
                         deleted: false
@@ -3716,7 +3873,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'a8d24d55960a48d19ef5da08394716af'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'gender'
@@ -3749,7 +3906,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'a935b3ecd5164a339506b883f6281cd4'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'start_time'
@@ -3758,7 +3915,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'a97f58ea19df43c3baaeb34fb4354050'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'next_dose_due'
@@ -3767,7 +3924,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'a9d541dc570e4d89bcb382de10d8ec30'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'phone'
@@ -3850,7 +4007,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'afb54158ca0245fc92a1fd2e4771fedf'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'medical_history'
@@ -3921,7 +4078,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'b339e94bf7a8461388a315e7900dc814'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'phone'
@@ -4042,7 +4199,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'b6f8fb28450a48f5841bb8a9a22ed716'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'barangay'
@@ -4117,7 +4274,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'b909ca84831c4148a4bd2036277fec19'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'full_name'
@@ -4271,7 +4428,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'bc2ec2bd517b438b8824126ef755e629'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'address'
@@ -4359,7 +4516,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'bfacd43905084fc0858e4116387e9819'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'address'
@@ -4368,7 +4525,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'c089673140b34becad089b1a1cabc65a'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'available_slots'
@@ -4421,7 +4578,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'c3587ddfc39f441b933496695cb60c64'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'date_of_birth'
@@ -4466,7 +4623,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'c4f2bd81fcc74afba38ed6a526bcec28'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccination_status'
@@ -4476,7 +4633,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'c56ea3b73a454586bc25bf9faa7e9d21'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'location'
@@ -4527,7 +4684,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'c6eddbe5708b4887bd4c35827229dfd4'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'barangay'
@@ -4537,7 +4694,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'c73c81887ff54044926068e461ffaccd'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'end_time'
@@ -4561,6 +4718,14 @@ declare global {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'hd_recent_vaccine'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_index'
+                        id: 'c8e0cde570bc486ebed571a687aef8f2'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_appointment'
+                            col_name_string: 'schedule_slot'
                         }
                     },
                     {
@@ -4747,6 +4912,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_index'
+                        id: 'd11bc3a6d3e8436780812d3c7dfe8f3d'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_medical_record'
+                            col_name_string: 'citizen'
+                        }
+                    },
+                    {
                         table: 'sys_dictionary'
                         id: 'd1773b8ebfe941aa90494c88bd69b9b8'
                         deleted: true
@@ -4758,7 +4931,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'd1b11da1973144d89cb3a34c0144d010'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'reference_number'
@@ -4767,7 +4940,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'd1d0549638c5461dba9870647ae8994c'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'dose_number'
@@ -4905,7 +5078,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'dadc1eb90c184f69bcd8a37df9a42f03'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'side_effects'
@@ -4914,7 +5087,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'dccdb1b926594bccb60850f1be533791'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'end_time'
@@ -4951,7 +5124,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'def5a375a04c456d84232e4e709c9fb2'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'lot_number'
@@ -4961,7 +5134,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'df35f42a90c240239d7d280b479b8c6f'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'administered_by'
@@ -4981,7 +5154,7 @@ declare global {
                     {
                         table: 'sys_dictionary'
                         id: 'e03dee1f4a1048de9fe79b6bec539c81'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'contact_person'
@@ -5046,7 +5219,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'e3a3ff06436f42af8c4a49afed8365b6'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'patient_id'
@@ -5341,6 +5514,24 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_ui_list_element'
+                        id: 'f138926ac3d487103b31b1f1b401312c'
+                        key: {
+                            list_id: {
+                                id: '7538926ac3d487103b31b1f1b4013126'
+                                key: {
+                                    name: 'x_2009786_vaccinat_appointment'
+                                    view: 'Default view'
+                                    sys_domain: 'global'
+                                    element: 'NULL'
+                                    relationship: 'NULL'
+                                    parent: 'NULL'
+                                }
+                            }
+                            element: 'dose_number'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: 'f1dbcf99dd074a12b25140f71d81ac97'
                         key: {
@@ -5388,6 +5579,24 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'appointment'
+                        }
+                    },
+                    {
+                        table: 'sys_ui_list_element'
+                        id: 'f5381e6ac3d487103b31b1f1b401312f'
+                        key: {
+                            list_id: {
+                                id: '7538926ac3d487103b31b1f1b4013126'
+                                key: {
+                                    name: 'x_2009786_vaccinat_appointment'
+                                    view: 'Default view'
+                                    sys_domain: 'global'
+                                    element: 'NULL'
+                                    relationship: 'NULL'
+                                    parent: 'NULL'
+                                }
+                            }
+                            element: 'status'
                         }
                     },
                     {
@@ -5448,7 +5657,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'f8df0c693b7344159337aed943d5e9da'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'side_effects'
@@ -5481,7 +5690,7 @@ declare global {
                     {
                         table: 'sys_documentation'
                         id: 'fb90a0f7ee1a4425aca786f9a2d777e6'
-                        deleted: true
+                        deleted: false
                         key: {
                             name: 'x_2009786_vaccinat_medical_record'
                             element: 'vaccination_date'
@@ -5503,6 +5712,14 @@ declare global {
                             }
                             element: 'start_date_time'
                             position: '6'
+                        }
+                    },
+                    {
+                        table: 'sys_index'
+                        id: 'fc408703558f4952b6ca8b54302db711'
+                        key: {
+                            logical_table_name: 'x_2009786_vaccinat_appointment'
+                            col_name_string: 'citizen'
                         }
                     },
                     {

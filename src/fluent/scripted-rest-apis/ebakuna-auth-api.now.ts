@@ -1,6 +1,14 @@
-﻿import '@servicenow/sdk/global'
+import '@servicenow/sdk/global'
 import { RestApi } from '@servicenow/sdk/core'
-import { authenticateUser, registerUser, createBooking, trackBooking, getDashboardStats, resetAppUsers, reviewBookingDecision } from '../../server/auth-handler.js'
+import {
+    authenticateUser,
+    registerUser,
+    createBooking,
+    trackBooking,
+    getDashboardStats,
+    resetAppUsers,
+    reviewBookingDecision,
+} from '../../server/auth-handler.js'
 
 /**
  * Scripted REST API for eBakuna Authentication
@@ -9,12 +17,12 @@ import { authenticateUser, registerUser, createBooking, trackBooking, getDashboa
 RestApi({
     $id: Now.ID['ebakuna_auth_api'],
     name: 'eBakuna Authentication API',
-    service_id: 'ebakuna_auth',
-    short_description: 'Authentication and registration API for eBakuna vaccination system',
+    serviceId: 'ebakuna_auth',
+    shortDescription: 'Authentication and registration API for eBakuna vaccination system',
     active: true,
     consumes: 'application/json',
     produces: 'application/json',
-    enforce_acl: [],
+    enforceAcl: [],
     routes: [
         {
             $id: Now.ID['ebakuna_auth_login_route'],
@@ -22,18 +30,18 @@ RestApi({
             path: '/login',
             method: 'POST',
             script: authenticateUser,
-            short_description: 'Authenticate user credentials and return user profile with roles',
+            shortDescription: 'Authenticate user credentials and return user profile with roles',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: [],
-            request_example: JSON.stringify({
-                username: "user@example.com",
-                password: "password123"
-            })
+            enforceAcl: [],
+            requestExample: JSON.stringify({
+                username: 'user@example.com',
+                password: 'password123',
+            }),
         },
         {
             $id: Now.ID['ebakuna_auth_register_route'],
@@ -41,21 +49,21 @@ RestApi({
             path: '/register',
             method: 'POST',
             script: registerUser,
-            short_description: 'Register a new user account',
+            shortDescription: 'Register a new user account',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: [],
-            request_example: JSON.stringify({
-                username: "newuser",
-                password: "password123",
-                email: "user@example.com",
-                firstName: "John",
-                lastName: "Doe"
-            })
+            enforceAcl: [],
+            requestExample: JSON.stringify({
+                username: 'newuser',
+                password: 'password123',
+                email: 'user@example.com',
+                firstName: 'John',
+                lastName: 'Doe',
+            }),
         },
         {
             $id: Now.ID['ebakuna_booking_create_route'],
@@ -63,25 +71,25 @@ RestApi({
             path: '/booking',
             method: 'POST',
             script: createBooking,
-            short_description: 'Create a new vaccination booking request',
+            shortDescription: 'Create a new vaccination booking request',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: [],
-            request_example: JSON.stringify({
-                fullName: "John Doe",
-                contactNo: "09123456789",
-                dateOfBirth: "1990-05-15",
-                barangay: "Cebu City",
-                vaccineType: "Pfizer",
-                preferredDate: "2024-01-20",
-                doseNumber: "1",
-                healthUnit: "Barangay Clinic",
-                referenceNumber: "EBK-12345"
-            })
+            enforceAcl: [],
+            requestExample: JSON.stringify({
+                fullName: 'John Doe',
+                contactNo: '09123456789',
+                dateOfBirth: '1990-05-15',
+                barangay: 'Cebu City',
+                vaccineType: 'Pfizer',
+                preferredDate: '2024-01-20',
+                doseNumber: '1',
+                healthUnit: 'Barangay Clinic',
+                referenceNumber: 'EBK-12345',
+            }),
         },
         {
             $id: Now.ID['ebakuna_booking_track_route'],
@@ -89,14 +97,14 @@ RestApi({
             path: '/track',
             method: 'POST',
             script: trackBooking,
-            short_description: 'Track booking status by reference number',
+            shortDescription: 'Track booking status by reference number',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: []
+            enforceAcl: [],
         },
         {
             $id: Now.ID['ebakuna_booking_review_route'],
@@ -104,14 +112,14 @@ RestApi({
             path: '/review-booking',
             method: 'POST',
             script: reviewBookingDecision,
-            short_description: 'Approve or reject citizen booking requests',
+            shortDescription: 'Approve or reject citizen booking requests',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: []
+            enforceAcl: [],
         },
         {
             $id: Now.ID['ebakuna_reset_users_route'],
@@ -119,14 +127,14 @@ RestApi({
             path: '/reset-users',
             method: 'POST',
             script: resetAppUsers,
-            short_description: 'Delete all app users and app credential records',
+            shortDescription: 'Delete all app users and app credential records',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: []
+            enforceAcl: [],
         },
         {
             $id: Now.ID['ebakuna_stats_route'],
@@ -134,18 +142,80 @@ RestApi({
             path: '/stats',
             method: 'GET',
             script: getDashboardStats,
-            short_description: 'Get dashboard statistics',
+            shortDescription: 'Get dashboard statistics',
             version: 1,
             consumes: 'application/json',
             produces: 'application/json',
             authentication: false,
             authorization: false,
             internalRole: false,
-            enforce_acl: []
-        }
+            enforceAcl: [],
+        },
+        {
+            $id: Now.ID['3d936b067be94da3b795c418ea4f6de7'],
+            name: 'Booking',
+            consumes: 'application/json',
+            method: 'POST',
+            script: Now.include('./sys_ws_operation_3d936b067be94da3b795c418ea4f6de7.js'),
+            produces: 'application/json',
+            path: '/booking',
+            enforceAcl: [],
+            authorization: false,
+            authentication: false,
+            internalRole: false,
+            version: 1,
+        },
+        {
+            $id: Now.ID['6b5ac6368bd042d381ef748d0af67f02'],
+            name: 'Track',
+            consumes: 'application/json',
+            method: 'POST',
+            script: Now.include('./sys_ws_operation_6b5ac6368bd042d381ef748d0af67f02.js'),
+            produces: 'application/json',
+            path: '/track',
+            enforceAcl: [],
+            authorization: false,
+            authentication: false,
+            internalRole: false,
+            version: 1,
+        },
+        {
+            $id: Now.ID['6e0105d0f3b446a097d662ae75a51176'],
+            name: 'Register',
+            consumes: 'application/json',
+            method: 'POST',
+            script: Now.include('./sys_ws_operation_6e0105d0f3b446a097d662ae75a51176.js'),
+            produces: 'application/json',
+            path: '/register',
+            enforceAcl: [],
+            authorization: false,
+            authentication: false,
+            internalRole: false,
+            version: 1,
+        },
+        {
+            $id: Now.ID['aff35cc66457429b8fe57ca0922895fe'],
+            name: 'Login',
+            consumes: 'application/json',
+            method: 'POST',
+            script: Now.include('./sys_ws_operation_aff35cc66457429b8fe57ca0922895fe.js'),
+            produces: 'application/json',
+            path: '/login',
+            enforceAcl: [],
+            authorization: false,
+            authentication: false,
+            internalRole: false,
+            version: 1,
+        },
     ],
-    versions: [{
-        $id: Now.ID['ebakuna_auth_version_1'],
-        version: 1
-    }]
+    versions: [
+        {
+            $id: Now.ID['ebakuna_auth_version_1'],
+            version: 1,
+        },
+        {
+            $id: Now.ID['77543c0a9c0c4df1b4f0741f7994c44c'],
+            version: 1,
+        },
+    ],
 })
