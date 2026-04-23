@@ -215,7 +215,7 @@ RestApi({
         },
         {
             $id: Now.ID['77543c0a9c0c4df1b4f0741f7994c44c'],
-            version: 1,
+            version: 2,
         },
     ],
 })

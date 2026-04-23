@@ -10,10 +10,9 @@ export const appointmentReminderSchedule = BusinessRule({
   $id: Now.ID['appointment_reminder_schedule'],
   table: 'x_2009786_vaccinat_appointment',
   name: 'Send appointment reminders for tomorrow',
-  when: 'async',
-  async: true,
+  when: 'after',
   priority: 100,
-  // NOTE: This rule runs asynchronously (scheduled) to check for appointments 1 day away
+  // NOTE: This rule checks for appointments scheduled 1 day away and sends reminders
   script: `
     (function() {
       // Calculate tomorrow's date range

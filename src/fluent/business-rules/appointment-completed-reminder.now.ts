@@ -11,7 +11,6 @@ export const appointmentCompletedReminder = BusinessRule({
   table: 'x_2009786_vaccinat_appointment',
   name: 'Send dose reminder on appointment completion',
   when: 'after',
-  query_condition: 'status=completed',
   priority: 100,
   script: `
     (function() {
@@ -19,7 +18,11 @@ export const appointmentCompletedReminder = BusinessRule({
       const currentStatus = current.getValue('status');
       const previousStatus = previous.getValue('status');
       
-      // Only send reminder if status changed TO 'completed'
+      // Only process if status is 'completed' and changed TO 'completed'
+      if (currentStatus !== 'completed') {
+        return;
+      }
+      
       if (previousStatus !== 'completed' && currentStatus === 'completed') {
         try {
           const appointmentRec = new GlideRecord('x_2009786_vaccinat_appointment');
