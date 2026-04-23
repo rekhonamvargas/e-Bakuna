@@ -10,6 +10,15 @@ import {
 
 /**
  * Citizen Booking - Individual citizen vaccination bookings
+ * 
+ * NOTE: This table is NOT part of the core data model (which uses x_2009786_vaccinat_appointment).
+ * However, it is actively used by the legacy booking workflow in:
+ * - src/server/auth-handler.js (booking creation, retrieval, updates)
+ * - src/client/services/EBakunaService.js (booking API calls)
+ * 
+ * DECISION: Keeping this table to maintain compatibility with existing production code.
+ * TODO: Review if this table should be deprecated in favor of the appointment table,
+ *       or if it serves a different purpose that warrants keeping both.
  */
 export const x_2009786_vaccinat_citizen_booking = Table({
   name: 'x_2009786_vaccinat_citizen_booking',

@@ -20,10 +20,32 @@ export const providerRole = Role({
     description: 'Role for vaccination system providers'
 })
 
-// Scaffolded structure template exports
+// ═══════════════════════════════════════════
+// CORE DATA MODEL TABLES — e-Bakuna System
+// ═══════════════════════════════════════════
+export * from './tables/user-credential.now'
+export * from './tables/user-role.now'
+export * from './tables/clinic.now'
+export * from './tables/clinic-schedule.now'
+export * from './tables/appointment.now'
+export * from './tables/medical-record.now'
+
+// ═══════════════════════════════════════════
+// ACCESS CONTROL LISTS (ACLs)
+// ═══════════════════════════════════════════
+export * from './acl.now'
+
+// ═══════════════════════════════════════════
+// ADDITIONAL TABLES — Scaffolded Workflows
+// ═══════════════════════════════════════════
+// citizen-booking: Legacy table actively used in auth-handler.js and EBakunaService.js
+// EMAIL-DATA & MARKET-RESEARCH: Support scaffolded email processing workflow
+export * from './tables/citizen-booking.now'
 export * from './tables/email-data.now'
 export * from './tables/market-research.now'
 export * from './flows/inbound-email-parser.now'
 export * from './business-rules/market-research-parser.now'
+export * from './business-rules/appointment-completed-reminder.now'
+export * from './business-rules/appointment-reminder-schedule.now'
 export * from './navigation/application-menu.now'
 export * from './ui-policies/market-research-ui-policies.now'

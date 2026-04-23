@@ -35,13 +35,14 @@ export const x_2009786_vaccinat_appointment = Table({
     status: ChoiceColumn({
       label: 'Status',
       choices: {
-        confirmed: { label: 'Confirmed', sequence: 0 },
-        completed: { label: 'Completed', sequence: 1 },
-        no_show: { label: 'No-show', sequence: 2 },
-        cancelled: { label: 'Cancelled', sequence: 3 }
+        pending: { label: 'Pending', sequence: 0 },
+        confirmed: { label: 'Confirmed', sequence: 1 },
+        completed: { label: 'Completed', sequence: 2 },
+        no_show: { label: 'No-show', sequence: 3 },
+        cancelled: { label: 'Cancelled', sequence: 4 }
       },
       dropdown: 'dropdown_with_none',
-      default: 'confirmed',
+      default: 'pending',
       mandatory: true
     })
   },

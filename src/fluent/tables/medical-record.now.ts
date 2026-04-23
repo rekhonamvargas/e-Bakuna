@@ -27,12 +27,12 @@ export const x_2009786_vaccinat_medical_record = Table({
     allergies: StringColumn({
       label: 'Allergies',
       maxLength: 500,
-      mandatory: true
+      mandatory: false
     }),
     symptoms: StringColumn({
       label: 'Symptoms',
       maxLength: 255,
-      mandatory: true
+      mandatory: false
     }),
     follow_up_date: DateColumn({
       label: 'Follow-up Date',

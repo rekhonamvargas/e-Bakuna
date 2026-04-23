@@ -83,21 +83,10 @@ export default function Registration({ onNavigate, onLogin }) {
         role: formData.role
       });
 
-      // Persist fresh session and route by role immediately after signup.
-      if (registeredUser) {
-        localStorage.setItem('ebakuna_user', JSON.stringify(registeredUser));
-      }
-
-      if (registeredUser && typeof onLogin === 'function') {
-        onLogin(registeredUser);
-        return;
-      }
+      // DO NOT log user in or create session after registration
+      // User must explicitly log in
+      setSuccessMessage('✅ Registration successful! Redirecting to login page...');
       
-      setSuccessMessage('✅ Registration successful! Redirecting to login...');
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        onNavigate('login');
-      }, 2000);
       // Reset form
       setFormData({
         firstName: '',
@@ -107,6 +96,11 @@ export default function Registration({ onNavigate, onLogin }) {
         confirmPassword: '',
         role: 'citizen'
       });
+      
+      // Redirect to login after 1.5 seconds
+      setTimeout(() => {
+        onNavigate('login');
+      }, 1500);
     } catch (err) {
       setErrors({
         general: err.message || 'Registration failed. Please try again.'

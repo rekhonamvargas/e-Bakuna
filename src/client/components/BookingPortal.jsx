@@ -26,13 +26,16 @@ const VACCINES = [
 ]
 
 const BARANGAYS = [
-  'Mabolo', 'Guadalupe', 'Labangon', 'Apas', 'Banilad',
-  'Camputhaw', 'Carreta', 'Capitol Site', 'Cogon Ramos',
-  'Ermita', 'Guba', 'Kalunasan', 'Kasambagan', 'Lahug',
-  'Lorega', 'Luz', 'Mambaling', 'Pahina Central', 'Pardo',
-  'Punta Princesa', 'Sambag I', 'Sambag II', 'San Nicolas',
-  'Santa Cruz', 'Santo Nino', 'Sinsin', 'Suba', 'Talamban',
-  'Tinago', 'T. Padilla',
+  'Adlaon', 'Agsungot', 'Apas', 'Bacayan', 'Banilad', 'Binaliw', 'Bonbon', 'Budla-an', 'Busay',
+  'Cambinocot', 'Guba', 'Kalunasan', 'Lusaran', 'Mabini', 'Malubog', 'Pamutan', 'Paril', 'Pit-os',
+  'Pulangbato', 'Pung-ol-Sibugay', 'San Jose', 'Sapangdaku', 'Sinsin', 'Sirao', 'Sudlon I', 'Sudlon II',
+  'Tabunan', 'Tagbao', 'Talamban', 'Taptap', 'Toong', 'Camputhaw', 'Carreta', 'Cogon Ramos', 'Day-as',
+  'Ermita', 'Hippodromo', 'Kalubihan', 'Kamagayan', 'Kasambagan', 'Lahug', 'Lorega San Miguel', 'Luz',
+  'Mabolo', 'Pari-an', 'Tejero', 'Babag', 'Basak Pardo', 'Basak San Nicolas', 'Buhisan', 'Bulacao',
+  'Buot-Taup Pardo', 'Calamba', 'Cogon Pardo', 'Duljo-Fatima', 'Guadalupe', 'Inayawan', 'Kinasang-an Pardo',
+  'Labangon', 'Mambaling', 'Pahina Central', 'Pahina San Nicolas', 'Pasil', 'Punta Princesa', 'Quiot Pardo',
+  'San Antonio', 'San Nicolas Central', 'San Roque', 'Santa Cruz', 'Sawang Calero', 'Sibugay',
+  'Suba San Nicolas', 'T. Padilla', 'Taboan', 'Tisa', 'Zapatera'
 ]
 
 const DOSES = ['1st Dose', '2nd Dose', 'Booster']
