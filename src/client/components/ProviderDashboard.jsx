@@ -157,7 +157,13 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
 
   // ── schedule day grid ──
   const slotsByDate = schedules.reduce((acc, s) => {
-    const raw = extract(s.schedule_date) || extract(s.date) || extract(s.clinic_date) || extract(s.available_date)
+    const raw =
+      extract(s.start_date_time) ||
+      extract(s.end_date_time) ||
+      extract(s.schedule_date) ||
+      extract(s.date) ||
+      extract(s.clinic_date) ||
+      extract(s.available_date)
     if (!raw) return acc
     const d = new Date(raw)
     if (isNaN(d)) return acc
@@ -174,7 +180,11 @@ export default function ProviderDashboard({ user, onLogout, hideLogout = false, 
 
   const bookingRows = bookings.slice(0, 8)
   const extractDate = (b) =>
-    extract(b.preferred_date) || extract(b.appointment_date) || extract(b.clinic_schedule_date) || ''
+    extract(b.first_dose_date) ||
+    extract(b.preferred_date) ||
+    extract(b.appointment_date) ||
+    extract(b.clinic_schedule_date) ||
+    ''
 
   return (
     <div style={css.root}>

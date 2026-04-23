@@ -36,6 +36,7 @@ const BARANGAYS = [
 ]
 
 const DOSES = ['1st Dose', '2nd Dose', 'Booster']
+const DEFAULT_PROVIDER = 'Cebu City Health Office (CHO)'
 
 const STATUS_STEPS = [
   { id: 1, label: 'Submitted', desc: 'Request received and saved.' },
@@ -200,7 +201,7 @@ export default function BookingPortal({ user, onLogout, hideLogout = false, hide
   const defaultName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim()
   const userInitials = `${(user?.first_name || 'C').charAt(0)}${(user?.last_name || 'Z').charAt(0)}`.toUpperCase()
 
-  const makeBlank = (firstLabel = '', firstId = '') => ({
+  const makeBlank = (firstLabel = DEFAULT_PROVIDER, firstId = '') => ({
     fullName: defaultName,
     contactNo: '',
     dateOfBirth: '',
@@ -222,12 +223,20 @@ export default function BookingPortal({ user, onLogout, hideLogout = false, hide
   const [trackErr, setTrackErr] = useState('')
 
   useEffect(() => {
-    if (clinicOptions.length === 0) return
+    if (clinicOptions.length > 0) {
+      setForm((p) => {
+        if (p.healthUnit) return p
+        return { ...p, healthUnit: clinicOptions[0].label, healthUnitId: clinicOptions[0].id }
+      })
+      return
+    }
+
+    // Keep booking usable even when no provider records are currently available.
     setForm((p) => {
       if (p.healthUnit) return p
-      return { ...p, healthUnit: clinicOptions[0].label, healthUnitId: clinicOptions[0].id }
+      return { ...p, healthUnit: DEFAULT_PROVIDER, healthUnitId: '' }
     })
-  }, [clinics])
+  }, [clinicOptions])
 
   useEffect(() => {
     try {
@@ -430,16 +439,20 @@ export default function BookingPortal({ user, onLogout, hideLogout = false, hide
               <Field label="Provider / Clinic" error={errors.healthUnit}>
                 {clinicsLoading ? (
                   <span style={css.clinicMsg(false)}>Loading available providers…</span>
-                ) : clinicsError ? (
-                  <span style={css.clinicMsg(true)}>{clinicsError}</span>
-                ) : clinicOptions.length === 0 ? (
-                  <span style={css.clinicMsg(true)}>No providers currently available.</span>
                 ) : (
                   <select name="healthUnit" value={form.healthUnit} onChange={handleChange} style={css.select(errors.healthUnit)}>
-                    {clinicOptions.map((c) => (
-                      <option key={c.id} value={c.label}>{c.label}</option>
-                    ))}
+                    {clinicOptions.length === 0 ? (
+                      <option value={DEFAULT_PROVIDER}>{DEFAULT_PROVIDER}</option>
+                    ) : (
+                      clinicOptions.map((c) => (
+                        <option key={c.id} value={c.label}>{c.label}</option>
+                      ))
+                    )}
                   </select>
+                )}
+                {!clinicsLoading && clinicsError && <span style={css.clinicMsg(true)}>{clinicsError}</span>}
+                {!clinicsLoading && !clinicsError && clinicOptions.length === 0 && (
+                  <span style={css.clinicMsg(true)}>No providers currently available. Using default CHO clinic.</span>
                 )}
               </Field>
             </div>

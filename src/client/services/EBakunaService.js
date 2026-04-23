@@ -10,11 +10,17 @@ export class EBakunaService {
 
   // Helper method to get authenticated headers
   getHeaders() {
-    return {
+    const headers = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-UserToken': window.g_ck
+      'Accept': 'application/json'
     }
+
+    // ServiceNow table APIs use g_ck when available.
+    if (typeof window !== 'undefined' && window.g_ck) {
+      headers['X-UserToken'] = window.g_ck
+    }
+
+    return headers
   }
 
   // Helper method to handle API responses
@@ -102,7 +108,8 @@ export class EBakunaService {
     try {
       const params = new URLSearchParams({
         sysparm_display_value: 'all',
-        sysparm_query: 'active=true',
+        // `status` is the real choice field on x_2009786_vaccinat_clinic.
+        sysparm_query: 'status=active',
         ...filters
       })
       
@@ -126,7 +133,7 @@ export class EBakunaService {
         headers: this.getHeaders(),
         body: JSON.stringify({
           ...clinicData,
-          active: true
+          status: 'active'
         })
       })
       
