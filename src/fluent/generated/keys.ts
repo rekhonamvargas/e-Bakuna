@@ -5,6 +5,26 @@ declare global {
         namespace Internal {
             interface Keys extends KeysRegistry {
                 explicit: {
+                    '3d936b067be94da3b795c418ea4f6de7': {
+                        table: 'sys_ws_operation'
+                        id: '3d936b067be94da3b795c418ea4f6de7'
+                    }
+                    '6b5ac6368bd042d381ef748d0af67f02': {
+                        table: 'sys_ws_operation'
+                        id: '6b5ac6368bd042d381ef748d0af67f02'
+                    }
+                    '6e0105d0f3b446a097d662ae75a51176': {
+                        table: 'sys_ws_operation'
+                        id: '6e0105d0f3b446a097d662ae75a51176'
+                    }
+                    '77543c0a9c0c4df1b4f0741f7994c44c': {
+                        table: 'sys_ws_version'
+                        id: '77543c0a9c0c4df1b4f0741f7994c44c'
+                    }
+                    aff35cc66457429b8fe57ca0922895fe: {
+                        table: 'sys_ws_operation'
+                        id: 'aff35cc66457429b8fe57ca0922895fe'
+                    }
                     appointment_citizen_create: {
                         table: 'sys_security_acl'
                         id: 'ad55c9cc7d424849bfa085570464c94b'
@@ -15,6 +35,10 @@ declare global {
                         id: 'dcf61022ddd743b2baf6b185cfb7ae31'
                         deleted: true
                     }
+                    appointment_completed_reminder: {
+                        table: 'sys_script'
+                        id: '872527c4f3094c1e99dc720e8ca950d7'
+                    }
                     appointment_provider_read: {
                         table: 'sys_security_acl'
                         id: 'dafacc0b1a144760ba94e44d4c14c54b'
@@ -24,6 +48,10 @@ declare global {
                         table: 'sys_security_acl'
                         id: '659bb06542ae42ea867fa3abf19b3b67'
                         deleted: true
+                    }
+                    appointment_reminder_schedule: {
+                        table: 'sys_script'
+                        id: '4ec93a6600134ca9a85aead7011741b2'
                     }
                     appointment_staff_read: {
                         table: 'sys_security_acl'
@@ -220,6 +248,10 @@ declare global {
                         table: 'sys_module'
                         id: '6b303528b10640bab7e143b407f84868'
                     }
+                    src_server_notificationService_js: {
+                        table: 'sys_module'
+                        id: '5ee5d0c8af3a4495bd4471c7dd7e86e6'
+                    }
                 }
                 composite: [
                     {
@@ -277,6 +309,13 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'cogon_pardo'
+                        }
+                    },
+                    {
+                        table: 'ua_table_licensing_config'
+                        id: '052eb4c8d7f6411fbb6749ef2b8ba91f'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
                         }
                     },
                     {
@@ -875,6 +914,7 @@ declare global {
                     {
                         table: 'sys_ux_lib_asset'
                         id: '1fa34f9ace8a412491e2377b4b4bfd63'
+                        deleted: true
                         key: {
                             name: 'x_2009786_vaccinat/vendor-react-dom.js.map'
                         }
@@ -933,6 +973,15 @@ declare global {
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             element: 'barangay'
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: '23fd17653399468bae9c9bc8a3cff65d'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                            value: 'citizen'
                         }
                     },
                     {
@@ -1286,6 +1335,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_documentation'
+                        id: '31ed3ba40417468fbab188043f024893'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                            language: 'en'
+                        }
+                    },
+                    {
                         table: 'sys_choice'
                         id: '320d6391d60a4d7d898a0d3d5a69687d'
                         deleted: true
@@ -1433,6 +1491,14 @@ declare global {
                             name: 'x_2009786_vaccinat_user_credential'
                             element: 'active'
                             language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '362f1153dc1d4d73833cece5c8cb130b'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'user'
                         }
                     },
                     {
@@ -2258,6 +2324,7 @@ declare global {
                     {
                         table: 'sys_ux_lib_asset'
                         id: '5be6b7a5f7014dd391eff190aa6f6973'
+                        deleted: true
                         key: {
                             name: 'x_2009786_vaccinat/vendor-react-dom'
                         }
@@ -2384,6 +2451,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '614b12eac5414de1b47eb2c22581b01a'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'active'
+                        }
+                    },
+                    {
                         table: 'sys_choice_set'
                         id: '61f344f5e817480a9403e8ce984222de'
                         deleted: false
@@ -2471,11 +2546,28 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_dictionary'
+                        id: '644095c6850741dbb6fc3c3164d2e867'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: '64faa3e794a449a5b13daaf93ef00853'
                         key: {
                             name: 'x_2009786_vaccinat_clinic_schedule'
                             element: 'max_capacity'
+                            language: 'en'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '6556388cc8ec4e06a8b988471f72e617'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'NULL'
                             language: 'en'
                         }
                     },
@@ -2735,6 +2827,7 @@ declare global {
                     {
                         table: 'sys_ui_list_element'
                         id: '71381e6ac3d487103b31b1f1b401312f'
+                        deleted: true
                         key: {
                             list_id: {
                                 id: '7538926ac3d487103b31b1f1b4013126'
@@ -2848,6 +2941,7 @@ declare global {
                     {
                         table: 'sys_ui_list'
                         id: '7538926ac3d487103b31b1f1b4013126'
+                        deleted: true
                         key: {
                             name: 'x_2009786_vaccinat_appointment'
                             view: {
@@ -2865,6 +2959,7 @@ declare global {
                     {
                         table: 'sys_ui_list_element'
                         id: '7538926ac3d487103b31b1f1b401312b'
+                        deleted: true
                         key: {
                             list_id: {
                                 id: '7538926ac3d487103b31b1f1b4013126'
@@ -3004,6 +3099,7 @@ declare global {
                     {
                         table: 'sys_ui_list_element'
                         id: '7938926ac3d487103b31b1f1b401312c'
+                        deleted: true
                         key: {
                             list_id: {
                                 id: '7538926ac3d487103b31b1f1b4013126'
@@ -3025,6 +3121,22 @@ declare global {
                         deleted: true
                         key: {
                             name: 'x_2009786_vaccinat_schedule'
+                        }
+                    },
+                    {
+                        table: 'sys_db_object'
+                        id: '7a3fc714a04b4110b272d8ff9a8183a4'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '7aba2d97f3604cee83fac5455457d518'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'active'
+                            language: 'en'
                         }
                     },
                     {
@@ -3081,6 +3193,15 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'mabini'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '7f466cfb3fa7400bb274fe7d5f54b498'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'user'
+                            language: 'en'
                         }
                     },
                     {
@@ -3466,6 +3587,14 @@ declare global {
                             name: 'x_2009786_vaccinat_clinic'
                             element: 'barangay'
                             value: 'pari_an'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '94676b14ce5e4dea9aabcac208364a98'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'NULL'
                         }
                     },
                     {
@@ -4343,6 +4472,15 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_choice'
+                        id: 'babdbac450e546f58d1cd94676c39ecf'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                            value: 'provider'
+                        }
+                    },
+                    {
                         table: 'sys_ux_lib_asset'
                         id: 'bad2561914234f13938569fd0fa9eb32'
                         key: {
@@ -5217,6 +5355,14 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_choice_set'
+                        id: 'e301b4c012fc44e9865c989b541416f9'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: 'e3a3ff06436f42af8c4a49afed8365b6'
                         deleted: false
@@ -5516,6 +5662,7 @@ declare global {
                     {
                         table: 'sys_ui_list_element'
                         id: 'f138926ac3d487103b31b1f1b401312c'
+                        deleted: true
                         key: {
                             list_id: {
                                 id: '7538926ac3d487103b31b1f1b4013126'
@@ -5584,6 +5731,7 @@ declare global {
                     {
                         table: 'sys_ui_list_element'
                         id: 'f5381e6ac3d487103b31b1f1b401312f'
+                        deleted: true
                         key: {
                             list_id: {
                                 id: '7538926ac3d487103b31b1f1b4013126'
@@ -5810,6 +5958,15 @@ declare global {
                                     name: 'x_2009786_vaccinat.clinic_staff'
                                 }
                             }
+                        }
+                    },
+                    {
+                        table: 'sys_choice'
+                        id: 'ff23d9179cf14fedbc1003068cd44e32'
+                        key: {
+                            name: 'x_2009786_vaccinat_user_role'
+                            element: 'role'
+                            value: 'clinic_staff'
                         }
                     },
                     {

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { AuthService } from '../services/AuthService.js'
-import styles from './Login.module.css'
+import './Login.css'
 
 function Field({ id, label, icon, type = 'text', value, onChange, placeholder, autoComplete }) {
   const [focused, setFocused] = useState(false)
@@ -10,11 +10,11 @@ function Field({ id, label, icon, type = 'text', value, onChange, placeholder, a
   const inputType = isPassword ? (showPw ? 'text' : 'password') : type
 
   return (
-    <div className={styles.fieldGroup}>
-      <label htmlFor={id} className={styles.label}>{label}</label>
+    <div className="fieldGroup">
+      <label htmlFor={id} className="label">{label}</label>
 
-      <div className={styles.inputWrap}>
-        <span className={styles.inputIcon}>{icon}</span>
+      <div className="inputWrap">
+        <span className="inputIcon">{icon}</span>
 
         <input
           id={id}
@@ -24,7 +24,7 @@ function Field({ id, label, icon, type = 'text', value, onChange, placeholder, a
           onChange={onChange}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className={`${styles.input} ${focused ? styles.focused : ''}`}
+          className={`input ${focused ? 'focused' : ''}`}
           placeholder={placeholder}
           autoComplete={autoComplete}
           required
@@ -33,7 +33,7 @@ function Field({ id, label, icon, type = 'text', value, onChange, placeholder, a
         {isPassword && (
           <button
             type="button"
-            className={styles.showToggle}
+            className="showToggle"
             onClick={() => setShowPw(v => !v)}
           >
             {showPw ? 'HIDE' : 'SHOW'}
@@ -47,7 +47,7 @@ function Field({ id, label, icon, type = 'text', value, onChange, placeholder, a
 function ErrorBanner({ message }) {
   if (!message) return null
   return (
-    <div className={styles.error}>
+    <div className="error">
       <span>⚠</span>
       <span>{message}</span>
     </div>
@@ -57,7 +57,7 @@ function ErrorBanner({ message }) {
 function DebugPanel({ info }) {
   if (!info) return null
   return (
-    <pre className={styles.debug}>
+    <pre className="debug">
       {JSON.stringify(info, null, 2)}
     </pre>
   )
@@ -95,25 +95,25 @@ export default function Login({ onLogin, onNavigate }) {
   }
 
   return (
-    <div className={styles.root}>
-      <div className={styles.card}>
-        <div className={styles.stripe} />
+    <div className="root">
+      <div className="card">
+        <div className="stripe" />
 
-        <div className={styles.body}>
-          <div className={styles.header}>
-            <div className={styles.logo}>
-              <div className={styles.logoIcon}>✚</div>
+        <div className="body">
+          <div className="header">
+            <div className="logo">
+              <div className="logoIcon">✚</div>
               <div>
-                <div className={styles.logoText}>E-Bakuna</div>
-                <div className={styles.logoSub}>Vaccination System</div>
+                <div className="logoText">E-Bakuna</div>
+                <div className="logoSub">Vaccination System</div>
               </div>
             </div>
 
-            <h2 className={styles.title}>Welcome back</h2>
-            <p className={styles.subtitle}>Sign in to access your dashboard</p>
+            <h2 className="title">Welcome back</h2>
+            <p className="subtitle">Sign in to access your dashboard</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className="form">
             <ErrorBanner message={error} />
             <DebugPanel info={debugInfo} />
 
@@ -140,18 +140,18 @@ export default function Login({ onLogin, onNavigate }) {
 
             <button
               type="submit"
-              className={styles.submitBtn}
+              className="submitBtn"
               disabled={loading}
             >
-              {loading ? <><div className={styles.spinner}/>Signing in…</> : 'Sign In'}
+              {loading ? <><div className="spinner"/>Signing in…</> : 'Sign In'}
             </button>
           </form>
 
-          <div className={styles.footer}>
+          <div className="footer">
             <p>
               Don't have an account?{' '}
               <button
-                className={styles.registerBtn}
+                className="registerBtn"
                 onClick={() => onNavigate?.('register')}
               >
                 Create one here
