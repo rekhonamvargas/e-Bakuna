@@ -33,7 +33,10 @@ export * from './tables/medical-record.now'
 // ═══════════════════════════════════════════
 // ACCESS CONTROL LISTS (ACLs)
 // ═══════════════════════════════════════════
-export * from './acl.now'
+// TODO: ACLs are currently defined in acl.now.ts but AccessControlList API is not
+// available in @servicenow/sdk/core v4.6.0. These must be defined in ServiceNow UI
+// or through XML update set instead. See src/fluent/acl.now.ts for required ACL matrix.
+// export * from './acl.now'
 
 // ═══════════════════════════════════════════
 // ADDITIONAL TABLES — Scaffolded Workflows

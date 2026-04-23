@@ -1,6 +1,5 @@
 import '@servicenow/sdk/global'
 import { BusinessRule } from '@servicenow/sdk/core'
-import { sendDoseReminder } from '../server/notificationService.js'
 
 /**
  * Business Rule - Send dose reminder when appointment is marked as completed
@@ -12,9 +11,6 @@ export const appointmentCompletedReminder = BusinessRule({
   table: 'x_2009786_vaccinat_appointment',
   name: 'Send dose reminder on appointment completion',
   when: 'after',
-  insert: false,
-  update: true,
-  delete: false,
   query_condition: 'status=completed',
   priority: 100,
   script: `
