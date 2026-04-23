@@ -5,3 +5,6 @@ node_modules/
 target/
 *.tsbuildinfo
 .jest_cache
+
+# Sys metadata files
+sys_metadata_link_*.xml
